@@ -1,4 +1,4 @@
-// src/app/(main)/fonts/[slug]/page.tsx
+// src/app/(main)/product/[slug]/page.tsx
 import { notFound } from 'next/navigation';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
@@ -52,21 +52,26 @@ export async function generateMetadata(
       ? font.main_description.replace(/<[^>]*>/g, '').split('. ')[0] + '.'
       : 'Discover the ' + font.name + ' font, a premium typeface perfect for your design projects.';
 
-    const jsonLd = { /* ... (kode JSON-LD tetap sama) ... */ };
+    const jsonLd = { /* ... */ };
 
     return {
       title: `${font.name} Font`,
       description: descriptionText,
       keywords: font.tags || [],
-      alternates: { canonical: `/fonts/${slug}` },
+      alternates: { canonical: `/product/${slug}` },
       openGraph: {
-        title: `${font.name} Font | Timeless Type`,
+        title: `${font.name} Font | Stylish Type`,
         description: descriptionText,
         images: [firstImage, ...previousImages],
-        url: `/fonts/${slug}`,
+        url: `/product/${slug}`,
         type: 'article',
       },
-      twitter: { /* ... (kode twitter tetap sama) ... */ },
+      twitter: {
+          card: 'summary_large_image',
+          title: `${font.name} Font | Stylish Type`,
+          description: descriptionText,
+          images: [firstImage],
+      },
       other: { 'script[type="application/ld+json"]': JSON.stringify(jsonLd) },
     };
   } catch (error) {
@@ -76,7 +81,6 @@ export async function generateMetadata(
 
 export const revalidate = 3600;
 
-// FUNGSI BARU UNTUK MENGAMBIL SEMUA DATA DARI SATU ENDPOINT
 async function getFontPageData(slug: string) {
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL;
     try {
@@ -92,8 +96,7 @@ async function getFontPageData(slug: string) {
     }
 }
 
-export default async function FontDetailPage({ params }: { params: { slug: string } }) {
-  // --- PERBAIKAN UTAMA: Panggil satu fungsi untuk semua data ---
+export default async function ProductDetailPage({ params }: { params: { slug: string } }) {
   const pageData = await getFontPageData(params.slug);
 
   if (!pageData) {
@@ -107,7 +110,6 @@ export default async function FontDetailPage({ params }: { params: { slug: strin
     allFontsForPairing,
     latestBlogPosts,
   } = pageData;
-  // --- AKHIR PERUBAIKAN ---
   
   const cookieStore = cookies();
   const supabase = createServerClient<Database>(
@@ -158,8 +160,8 @@ export default async function FontDetailPage({ params }: { params: { slug: strin
   };
 
   const glyphs = (font.glyphs_json as string[]) || [];
-  const partnerName = font.partners?.name || 'Timeless Type';
-  const partnerHref = font.partners ? `/partners/${font.partners.slug}` : '/fonts?partner=timeless-type';
+  const partnerName = font.partners?.name || 'Stylish Type';
+  const partnerHref = font.partners ? `/partners/${font.partners.slug}` : '/product?partner=stylishtype';
 
   return (
     <>
@@ -185,7 +187,7 @@ export default async function FontDetailPage({ params }: { params: { slug: strin
                 />
               )}
               
-              <RelatedTags purposeTags={font.purpose_tags ?? []} styleTags={font.tags ?? []} basePath="/fonts" />
+              <RelatedTags purposeTags={font.purpose_tags ?? []} styleTags={font.tags ?? []} basePath="/product" />
               <InfoActionSection />
               
               <div>

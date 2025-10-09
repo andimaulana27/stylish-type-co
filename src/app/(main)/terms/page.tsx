@@ -4,19 +4,17 @@ import BackToTopButton from "@/components/BackToTopButton";
 import SectionHeader from '@/components/SectionHeader';
 import TermsAccordion from '@/components/terms/TermsAccordion';
 import TrustedBySection from "@/components/TrustedBySection";
-// --- PERUBAHAN DI SINI: Impor yang dibutuhkan untuk mengambil data ---
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { Database } from '@/lib/database.types';
 
 export const metadata: Metadata = {
-  title: 'Terms of Service | Timeless Type',
-  description: 'Read the Terms of Service for using the Timeless Type website and its materials.',
+  title: 'Terms of Service | Stylish Type',
+  description: 'Read the Terms of Service for using the Stylish Type website and its materials.',
 };
 
-export const revalidate = 86400; // Revalidate setiap 24 jam (sebelumnya 1 jam)
+export const revalidate = 86400;
 
-// --- PERUBAHAN DI SINI: Mengubah fungsi menjadi async dan mengambil data ---
 export default async function TermsPage() {
   const cookieStore = cookies();
   const supabase = createServerClient<Database>(
@@ -48,7 +46,6 @@ export default async function TermsPage() {
         </div>
         
       </main>
-      {/* --- PERUBAHAN DI SINI: Memberikan prop 'brands' --- */}
       <TrustedBySection brands={brands || []} />
       <BackToTopButton />
     </div>

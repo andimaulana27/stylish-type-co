@@ -37,20 +37,20 @@ export async function generateMetadata(
         '@type': 'BlogPosting',
         headline: post.title,
         name: post.title,
-        description: post.excerpt || 'Read this article on Timeless Type Blog.',
+        description: post.excerpt || 'Read this article on Stylish Type Blog.',
         image: postImage,
         datePublished: new Date(post.created_at).toISOString(),
         dateModified: new Date(post.updated_at).toISOString(),
         author: {
           '@type': 'Person',
-          name: post.author_name || 'Timeless Type',
+          name: post.author_name || 'Stylish Type',
         },
         publisher: {
           '@type': 'Organization',
-          name: 'Timeless Type',
+          name: 'Stylish Type',
           logo: {
             '@type': 'ImageObject',
-            url: `${process.env.NEXT_PUBLIC_SITE_URL}/logo-timeless-type-footer.png`,
+            url: `${process.env.NEXT_PUBLIC_SITE_URL}/logo-stylishtype-footer.png`,
           },
         },
         url: `${process.env.NEXT_PUBLIC_SITE_URL}/blog/${slug}`,
@@ -58,11 +58,11 @@ export async function generateMetadata(
     
     return {
       title: post.title,
-      description: post.excerpt || 'Read this article on Timeless Type Blog.',
+      description: post.excerpt || 'Read this article on Stylish Type Blog.',
       keywords: post.tags || [],
       alternates: { canonical: `/blog/${slug}` },
       openGraph: {
-        title: `${post.title} | Timeless Type Blog`,
+        title: `${post.title} | Stylish Type Blog`,
         description: post.excerpt || '',
         images: [postImage, ...previousImages],
         url: `/blog/${slug}`,
@@ -70,7 +70,7 @@ export async function generateMetadata(
       },
       twitter: {
         card: 'summary_large_image',
-        title: `${post.title} | Timeless Type Blog`,
+        title: `${post.title} | Stylish Type Blog`,
         description: post.excerpt || '',
         images: [postImage],
       },
@@ -216,8 +216,6 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
                 
                 {post.show_toc && headings.length > 0 && <TableOfContents headings={headings} />}
                 
-                {/* --- PERUBAHAN UTAMA DI SINI --- */}
-                {/* Menghapus class 'blog-content' yang konflik dan hanya mengandalkan 'prose' */}
                 <div className="prose prose-lg prose-invert max-w-none mx-auto">
                   {processedContent}
                 </div>

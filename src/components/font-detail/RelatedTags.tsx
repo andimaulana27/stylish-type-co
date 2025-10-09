@@ -8,8 +8,9 @@ type RelatedTagsProps = {
   purposeTitle?: string;
   styleTags?: string[];
   styleTitle?: string;
-  basePath?: '/fonts' | '/bundles' | '/blog';
-  hideSubtitles?: boolean; // <-- PROPERTI BARU DITAMBAHKAN
+  // --- PERUBAHAN DI SINI: Menambahkan '/product' sebagai tipe yang valid ---
+  basePath?: '/product' | '/bundles' | '/blog';
+  hideSubtitles?: boolean;
 };
 
 const Tag = ({ name, basePath }: { name: string, basePath: string }) => {
@@ -28,8 +29,9 @@ const RelatedTags = ({
   purposeTitle = "Purpose",
   styleTags = [], 
   styleTitle = "Style",
-  basePath = '/fonts',
-  hideSubtitles = false // <-- NILAI DEFAULT BARU
+  // --- PERUBAHAN DI SINI: Mengganti nilai default ---
+  basePath = '/product',
+  hideSubtitles = false
 }: RelatedTagsProps) => {
   
   const hasPurposeTags = purposeTags.length > 0;
@@ -46,7 +48,6 @@ const RelatedTags = ({
 
       {hasPurposeTags && (
         <div className="mt-6">
-          {/* --- PERUBAHAN DI SINI: Sub-judul ditampilkan secara kondisional --- */}
           {!hideSubtitles && <h3 className="font-medium text-white text-sm mb-4">{purposeTitle}</h3>}
           <div className="flex flex-wrap gap-2">
             {purposeTags.map((tag) => <Tag key={tag} name={tag} basePath={basePath} />)}
@@ -56,7 +57,6 @@ const RelatedTags = ({
 
       {hasStyleTags && (
         <div className="mt-6">
-          {/* --- PERUBAHAN DI SINI: Sub-judul ditampilkan secara kondisional --- */}
           {!hideSubtitles && <h3 className="font-medium text-white text-sm mb-4">{styleTitle}</h3>}
           <div className="flex flex-wrap gap-2">
             {styleTags.map((tag) => <Tag key={tag} name={tag} basePath={basePath} />)}

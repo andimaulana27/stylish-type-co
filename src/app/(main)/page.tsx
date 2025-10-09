@@ -8,13 +8,11 @@ import NewHeroSection from "@/components/NewHeroSection";
 import LogotypePreview from "@/components/LogotypePreview";
 import FontInUseClient from '@/components/FontInUseClient';
 
-// --- PERUBAHAN UTAMA: Impor semua fungsi pengambilan data ---
 import { getPopularBundles } from '@/app/api/homepage/popular-bundles/route.get';
 import { getFeaturedProducts } from '@/app/api/homepage/featured-products/route.get';
 import { getLatestPosts } from '@/app/api/homepage/latest-posts/route.get';
 import { getBrands } from '@/app/api/homepage/trusted-by/route.get';
 import { getGalleryImages } from '@/app/api/homepage/font-in-use/route.get';
-// --------------------------------------------------------------------
 
 export const revalidate = 3600;
 
@@ -41,7 +39,6 @@ const SectionSkeleton = () => (
     </div>
 );
 
-// --- PERUBAHAN: Komponen ini sekarang menerima data via props ---
 const FontInUseSection = ({ galleryImages }: { galleryImages: any[] }) => {
     if (galleryImages.length === 0) return null;
 
@@ -56,7 +53,7 @@ const FontInUseSection = ({ galleryImages }: { galleryImages: any[] }) => {
                 </div>
                 <FontInUseClient galleryImages={galleryImages} />
                 <div className="text-center mt-16">
-                    <Button href="https://www.instagram.com/timelesstype.co" target="_blank" rel="noopener noreferrer">
+                    <Button href="https://www.instagram.com/stylishtype.co" target="_blank" rel="noopener noreferrer">
                         View All Gallery
                     </Button>
                 </div>
@@ -68,7 +65,6 @@ const FontInUseSection = ({ galleryImages }: { galleryImages: any[] }) => {
 export default async function HomePage() {
   const separatorClasses = "border-b border-white/10";
   
-  // --- PERUBAHAN UTAMA: Ambil semua data secara paralel ---
   const [
     popularBundlesData,
     featuredProductsData,
@@ -82,7 +78,6 @@ export default async function HomePage() {
     getBrands(),
     getGalleryImages()
   ]);
-  // -------------------------------------------------------
 
   return (
     <div>
@@ -100,14 +95,12 @@ export default async function HomePage() {
       
       <div className={separatorClasses}>
         <Suspense fallback={<SectionSkeleton />}>
-            {/* Kirim data sebagai props */}
             <PopularSection popularBundlesData={popularBundlesData.products || []} />
         </Suspense>
       </div>
 
       <div className={separatorClasses}>
         <Suspense fallback={<SectionSkeleton />}>
-            {/* Kirim data sebagai props */}
             <FeaturedProductsSection featuredProductsData={featuredProductsData.products || []} />
         </Suspense>
       </div>
@@ -120,18 +113,15 @@ export default async function HomePage() {
 
       <div className={separatorClasses}>
         <Suspense fallback={<div className="h-48 bg-brand-dark-secondary animate-pulse"></div>}>
-            {/* Kirim data sebagai props */}
             <TrustedBySection brands={brandsData.brands || []} />
         </Suspense>
       </div>
       
       <Suspense fallback={<SectionSkeleton />}>
-        {/* Kirim data sebagai props */}
         <FontInUseSection galleryImages={galleryImagesData.images || []} />
       </Suspense>
 
       <Suspense fallback={<SectionSkeleton />}>
-        {/* Kirim data sebagai props */}
         <BlogSection latestPosts={latestPostsData.posts || []} />
       </Suspense>
       

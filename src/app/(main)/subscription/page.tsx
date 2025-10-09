@@ -11,7 +11,6 @@ import { Metadata } from 'next';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { Database } from '@/lib/database.types';
-// --- Impor Komponen Banner Baru ---
 import SubscriptionPromoBanner from '@/components/subscription/SubscriptionPromoBanner';
 
 export const revalidate = 0;
@@ -28,7 +27,7 @@ const SectionSkeleton = () => (
 );
 
 export const metadata: Metadata = {
-  title: 'Font Subscription Plans | Timeless Type',
+  title: 'Font Subscription Plans | Stylish Type',
   description: 'Access our entire library of 100+ premium fonts with one simple subscription. Unlock creative freedom and unlimited downloads for one affordable price.',
 };
 
@@ -80,7 +79,6 @@ export default async function SubscriptionPage() {
             title="Creative Freedom Starts Here"
             subtitle="Access our entire library of premium fonts for one simple price, fueling your creative freedom."
           />
-          {/* --- BANNER BARU DITAMBAHKAN DI SINI --- */}
           <SubscriptionPromoBanner />
           
           <SubscriptionClientPage plans={plans} />
@@ -105,7 +103,7 @@ export default async function SubscriptionPage() {
             <SectionHeader
                 align="center"
                 title="Frequently Asked Questions"
-                subtitle="Have questions? We've got answers. If you can't find what you're looking for, feel free to contact us."
+                subtitle="Have questions? We've got answers. If you can't find what you're for, feel free to contact us."
             />
             
             <FaqSection />

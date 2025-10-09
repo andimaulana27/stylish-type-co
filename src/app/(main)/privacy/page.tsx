@@ -10,8 +10,8 @@ import { cookies } from 'next/headers';
 import { Database } from '@/lib/database.types';
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy | Timeless Type',
-  description: 'Read the Privacy Policy for using the Timeless Type website and its materials.',
+  title: 'Privacy Policy | Stylish Type',
+  description: 'Read the Privacy Policy for using the Stylish Type website and its materials.',
 };
 
 export const revalidate = 86400; // Revalidate setiap 24 jam

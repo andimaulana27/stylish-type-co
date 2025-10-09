@@ -15,7 +15,7 @@ import dynamic from 'next/dynamic';
 import MarqueeRow from '@/components/MarqueeRow';
 import Button from '@/components/Button';
 import { getAllFontsForMarqueeAction } from '@/app/actions/productActions';
-import { Metadata } from 'next'; // <-- 1. Impor Metadata
+import { Metadata } from 'next';
 
 const BlogCarousel = dynamic(() => import('@/components/blog/BlogCarousel'));
 
@@ -26,24 +26,22 @@ type BundleWithDiscounts = Tables<'bundles'> & {
   discounts: Pick<Tables<'discounts'>, 'name' | 'percentage'> | null;
 };
 
-// --- PERUBAHAN UTAMA: Fungsi generateMetadata ---
 export async function generateMetadata({ searchParams }: { searchParams: { [key: string]: string | string[] | undefined } }): Promise<Metadata> {
   const tag = searchParams.tag as string || null;
 
   if (tag) {
     const capitalizedTag = tag.charAt(0).toUpperCase() + tag.slice(1);
     return {
-      title: `Font Bundles Tagged with "${capitalizedTag}" | Timeless Type`,
+      title: `Font Bundles Tagged with "${capitalizedTag}" | Stylish Type`,
       description: `Discover curated font bundles tagged with "${capitalizedTag}". Get premium typefaces at an incredible value.`,
     };
   }
   
   return {
-    title: 'Unlock Value with Font Bundles | Timeless Type',
+    title: 'Unlock Value with Font Bundles | Stylish Type',
     description: 'Discover affordable font bundles featuring top-selling typefaces. Save big while building a professional font library for logos, branding, and creative projects.',
   };
 }
-// --- AKHIR PERUBAHAN ---
 
 export default async function AllBundlesPage({
   searchParams,
@@ -192,12 +190,12 @@ export default async function AllBundlesPage({
             <div className="container mx-auto px-6">
                 <SectionHeader
                     title="Our Staff Picks"
-                    subtitle="Check out some of our favorite fonts, curated by the Timeless Type team."
+                    subtitle="Check out some of our favorite fonts, curated by the Stylish Type team."
                 />
             </div>
             <MarqueeRow products={marqueeFonts} animationClass="animate-marquee-reverse-fast" />
             <div className="text-center mt-16">
-                <Button href="/fonts">
+                <Button href="/product">
                     Explore All Fonts
                 </Button>
             </div>

@@ -21,18 +21,17 @@ export async function generateMetadata({ searchParams }: { searchParams: { [key:
 
   if (category && category !== 'All Categories') {
     return {
-      title: `${category} Articles | Timeless Type Blog`,
-      description: `Explore all articles about ${category} on the Timeless Type blog. Find tutorials, inspiration, and tips to elevate your design skills.`,
+      title: `${category} Articles | Stylish Type Blog`,
+      description: `Explore all articles about ${category} on the Stylish Type blog. Find tutorials, inspiration, and tips to elevate your design skills.`,
     };
   }
 
   return {
-    title: 'Font Talks & Type Tips | Timeless Type Blog',
+    title: 'Font Talks & Type Tips | Stylish Type Blog',
     description: 'Explore our latest thoughts, tricks, and tools to help you master the art of timeless typography.',
   };
 }
 
-// FUNGSI BARU UNTUK MENGAMBIL DATA DARI ENDPOINT
 async function getBlogListData(searchParams: { [key: string]: string | string[] | undefined }) {
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
     const params = new URLSearchParams(searchParams as Record<string, string>);
@@ -55,10 +54,8 @@ export default async function BlogPage({
 }: {
   searchParams: { [key: string]: string | string[] | undefined };
 }) {
-  // --- PERBAIKAN UTAMA: Panggil satu fungsi untuk semua data ---
   const { posts: formattedPosts, totalPages } = await getBlogListData(searchParams);
   const currentPage = Number(searchParams.page) || 1;
-  // --- AKHIR PERBAIKAN ---
 
   return (
     <div className="bg-brand-dark-secondary">

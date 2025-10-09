@@ -17,7 +17,7 @@ export default async function CheckoutSuccessPage() {
                     <Link href="/account/my-fonts" className="px-6 py-3 font-medium rounded-full text-center bg-brand-accent text-brand-darkest transition-all duration-300 ease-in-out hover:shadow-lg hover:shadow-brand-accent/40">
                         Go to My Fonts
                     </Link>
-                    <Link href="/fonts" className="px-6 py-3 font-medium rounded-full text-center bg-transparent border border-white/20 text-brand-light hover:bg-white/10 transition-colors">
+                    <Link href="/product" className="px-6 py-3 font-medium rounded-full text-center bg-transparent border border-white/20 text-brand-light hover:bg-white/10 transition-colors">
                         Continue Shopping
                     </Link>
                 </div>

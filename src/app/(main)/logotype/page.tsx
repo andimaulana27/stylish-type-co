@@ -9,11 +9,10 @@ import MarqueeRow from '@/components/MarqueeRow';
 import Button from '@/components/Button';
 import { Metadata } from 'next';
 
-// --- PERBAIKAN: Menggunakan path import yang benar ---
 const BlogCarousel = dynamic(() => import('@/components/blog/BlogCarousel'));
 
 export const metadata: Metadata = {
-  title: 'Logotype Tester | Timeless Type',
+  title: 'Logotype Tester | Stylish Type',
   description: 'Find the right typeface to make your logo stand out. Instantly preview your brand name with hundreds of our premium logotype font styles.',
 };
 
@@ -65,12 +64,12 @@ export default async function LogotypePage() {
                     <div className="container mx-auto px-6">
                         <SectionHeader
                             title="Our Staff Picks"
-                            subtitle="Check out some of our favorite fonts, curated by the Timeless Type team."
+                            subtitle="Check out some of our favorite fonts, curated by the Stylish Type team."
                         />
                     </div>
                     <MarqueeRow products={marqueeFonts} animationClass="animate-marquee-reverse-fast" />
                     <div className="text-center mt-16">
-                        <Button href="/fonts">
+                        <Button href="/product">
                             Explore All Fonts
                         </Button>
                     </div>

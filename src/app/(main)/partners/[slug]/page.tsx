@@ -40,8 +40,8 @@ export async function generateMetadata(
   }
 
   return {
-    title: `Fonts by ${partner.name} | Timeless Type`,
-    description: partner.subheadline || `Explore the complete font collection from our creative partner, ${partner.name}, available on Timeless Type.`,
+    title: `Fonts by ${partner.name} | Stylish Type`,
+    description: partner.subheadline || `Explore the complete font collection from our creative partner, ${partner.name}, available on Stylish Type.`,
   };
 }
 
@@ -94,7 +94,6 @@ export default async function PartnerDetailPage({
         }
     );
 
-    // --- PERUBAHAN DI SINI: Mengambil data partner dan brands secara paralel ---
     const [partnerRes, brandsRes] = await Promise.all([
         supabase.from('partners').select('*').eq('slug', params.slug).single(),
         supabase.from('brands').select('*').order('created_at', { ascending: false })
@@ -159,7 +158,6 @@ export default async function PartnerDetailPage({
                 initialTotalPages={totalPages}
             />
 
-            {/* --- PERUBAHAN DI SINI: Memberikan prop 'brands' --- */}
             <TrustedBySection brands={brands || []} />
             <BackToTopButton />
         </div>

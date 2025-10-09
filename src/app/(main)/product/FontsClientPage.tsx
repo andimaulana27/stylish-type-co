@@ -1,4 +1,4 @@
-// src/app/(main)/fonts/FontsClientPage.tsx
+// src/app/(main)/product/FontsClientPage.tsx
 'use client'; 
 
 import { useState, useEffect } from 'react';
@@ -91,19 +91,14 @@ export default function FontsClientPage({ initialFonts, initialTotalPages }: Fon
                     <SearchInput placeholder="Search font by name..." />
                 </div>
                 
-                {/* --- PERUBAHAN UTAMA DI SINI --- */}
-                {/* Wrapper baru untuk mengontrol layout filter & switcher */}
                 <div className="flex w-full items-center justify-between md:w-auto md:justify-end md:gap-4">
-                    {/* Grup ini memastikan filter tetap bersama di kiri (mobile) atau di kanan (desktop) */}
                     <div className="flex items-center gap-2 md:gap-4">
                         <FilterDropdown paramName="category" options={categoryOptions} label="Category" />
                         <FilterDropdown paramName="sort" options={sortOptions} label="Sort by" />
                     </div>
                     
-                    {/* Switcher sekarang terpisah, sehingga bisa didorong ke kanan pada mobile */}
                     <LayoutSwitcher />
                 </div>
-                {/* --- AKHIR PERUBAHAN --- */}
             </div>
             
             <div className={`mt-6 transition-all duration-300 ${isListLayout ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0 invisible'}`}>

@@ -36,7 +36,7 @@ export default async function ContactPage() {
   } else if (postsError) {
       console.error('Failed to fetch latest posts for contact page:', postsError);
   }
-
+  
   const { products: marqueeFonts } = await getAllFontsForMarqueeAction();
 
   return (
@@ -48,7 +48,7 @@ export default async function ContactPage() {
               title="Let's Connect"
               subtitle="We&apos;re excited to hear about your ideas. Reach out and let’s create something timeless together."
             />
-
+            
             <div className="mt-12">
               <ContactForm />
             </div>
@@ -70,7 +70,7 @@ export default async function ContactPage() {
             </div>
           </div>
         )}
-
+        
         <BlogCarousel
             posts={latestBlogPosts}
             title="Insights & Ideas"
@@ -78,7 +78,7 @@ export default async function ContactPage() {
         />
 
       </main>
-
+      
       <BackToTopButton />
     </div>
   );

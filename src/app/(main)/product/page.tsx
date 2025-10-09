@@ -1,4 +1,4 @@
-// src/app/(main)/fonts/page.tsx
+// src/app/(main)/product/page.tsx
 import { Suspense } from 'react';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
@@ -10,7 +10,7 @@ import { type CardPost } from '@/components/blog/BlogCard';
 import SectionHeader from '@/components/SectionHeader';
 import BackToTopButton from "@/components/BackToTopButton";
 import FontsClientPage from './FontsClientPage';
-import { Metadata } from 'next'; // <-- 1. Impor Metadata
+import { Metadata } from 'next';
 
 const RecommendedSection = dynamic(() => import('@/components/RecommendedSection'));
 const BlogCarousel = dynamic(() => import('@/components/blog/BlogCarousel'));
@@ -22,14 +22,13 @@ type FormattedFont = ProductData & {
 
 const ITEMS_PER_PAGE = 32;
 
-// --- PERUBAHAN UTAMA: Fungsi generateMetadata ---
 export async function generateMetadata({ searchParams }: { searchParams: { [key: string]: string | string[] | undefined } }): Promise<Metadata> {
   const category = searchParams.category as string || null;
   const tag = searchParams.tag as string || null;
 
   if (category && category !== 'All') {
     return {
-      title: `${category} Fonts | Timeless Type`,
+      title: `${category} Fonts | Stylish Type`,
       description: `Browse our collection of high-quality ${category} fonts. Perfect for designers and creatives looking for the right typeface.`,
     };
   }
@@ -37,19 +36,18 @@ export async function generateMetadata({ searchParams }: { searchParams: { [key:
   if (tag) {
     const capitalizedTag = tag.charAt(0).toUpperCase() + tag.slice(1);
     return {
-      title: `Fonts Tagged with "${capitalizedTag}" | Timeless Type`,
+      title: `Fonts Tagged with "${capitalizedTag}" | Stylish Type`,
       description: `Discover all premium fonts tagged with "${capitalizedTag}". Find the perfect style for your next design project.`,
     };
   }
   
   return {
-    title: 'All Premium Fonts for Designers | Timeless Type',
+    title: 'All Premium Fonts for Designers | Stylish Type',
     description: 'Explore diverse font categories including modern, classic, decorative, and thematic styles. Perfect for designers and creatives looking for the right typeface for any project.',
   };
 }
-// --- AKHIR PERUBAHAN ---
 
-export default async function AllFontsPage({
+export default async function AllProductsPage({
   searchParams,
 }: {
   searchParams: { [key: string]: string | string[] | undefined };

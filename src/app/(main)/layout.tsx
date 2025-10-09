@@ -19,7 +19,7 @@ export default async function MainLayout({
   const { featuredFonts, latestBundles } = await getSuggestionProductsAction();
 
   const cookieStore = cookies();
-  const consentCookie = cookieStore.get('timelesstype_cookie_consent');
+  const consentCookie = cookieStore.get('stylishtype_cookie_consent');
   const hasConsent = consentCookie?.value === 'accepted';
 
   return (

@@ -67,7 +67,7 @@ export async function generateMetadata(
     },
     brand: {
       '@type': 'Brand',
-      name: 'Timeless Type',
+      name: 'Stylish Type',
     },
   };
 
@@ -77,7 +77,7 @@ export async function generateMetadata(
     keywords: allTags,
     alternates: { canonical: `/bundles/${params.slug}` },
     openGraph: {
-      title: `${bundle.name} | Timeless Type`,
+      title: `${bundle.name} | Stylish Type`,
       description: descriptionText,
       images: [firstImage, ...previousImages],
       url: `/bundles/${params.slug}`,
@@ -85,7 +85,7 @@ export async function generateMetadata(
     },
     twitter: {
         card: 'summary_large_image',
-        title: `${bundle.name} | Timeless Type`,
+        title: `${bundle.name} | Stylish Type`,
         description: descriptionText,
         images: [firstImage],
     },
@@ -95,7 +95,6 @@ export async function generateMetadata(
 
 export const revalidate = 3600;
 
-// --- PERBAIKAN UTAMA: Mengembalikan isi fungsi yang benar ---
 const getFontBaseName = (fileName: string): string => {
     return fileName.replace(/\.[^/.]+$/, "").replace(/[-_ ](thin|extralight|light|regular|medium|semibold|bold|extrabold|black|italic|bolditalic)/i, '').trim();
 };
@@ -114,7 +113,6 @@ const getStyleName = (fileName: string): string => {
     }
     return 'Regular';
 };
-// --- AKHIR PERBAIKAN ---
 
 export default async function BundleDetailPage({ params }: { params: { slug: string } }) {
   const [pageData] = await Promise.all([
@@ -201,7 +199,7 @@ export default async function BundleDetailPage({ params }: { params: { slug: str
             <aside className="w-full lg:col-span-1 sticky top-28 h-fit">
               <div className='bg-brand-darkest p-8 rounded-lg border border-white/10'>
                 <ProductTitle title={bundle.name} />
-                <p className='text-brand-accent mt-2'>by TimelessType</p>
+                <p className='text-brand-accent mt-2'>by Stylish Type</p>
                 {!activeSubscription && <SubscriptionBenefitsCard />}
                 <div className="border-b border-white/10 my-6"></div>
                 <LicenseSelector font={productDataForLicenseSelector} licenses={licenses || []} />
