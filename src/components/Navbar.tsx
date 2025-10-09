@@ -13,16 +13,16 @@ import type { SuggestionProduct } from './SearchDropdownSuggestions';
 
 // --- DATA UNTUK SUBMENU MOBILE DIMULAI DI SINI ---
 const productCategories = [
-  { name: "All fonts", href: "/fonts" },
-  { name: "Serif Display", href: "/fonts?category=Serif+Display" },
-  { name: "Sans Serif", href: "/fonts?category=Sans+Serif" },
-  { name: "Slab Serif", href: "/fonts?category=Slab+Serif" },
-  { name: "Groovy", href: "/fonts?category=Groovy" },
-  { name: "Script", href: "/fonts?category=Script" },
-  { name: "Blackletter", href: "/fonts?category=Blackletter" },
-  { name: "Western", href: "/fonts?category=Western" },
-  { name: "Sport", href: "/fonts?category=Sport" },
-  { name: "Sci-Fi", href: "/fonts?category=Sci-Fi" },
+  { name: "All fonts", href: "/product" },
+  { name: "Serif Display", href: "/product?category=Serif+Display" },
+  { name: "Sans Serif", href: "/product?category=Sans+Serif" },
+  { name: "Slab Serif", href: "/product?category=Slab+Serif" },
+  { name: "Groovy", href: "/product?category=Groovy" },
+  { name: "Script", href: "/product?category=Script" },
+  { name: "Blackletter", href: "/product?category=Blackletter" },
+  { name: "Western", href: "/product?category=Western" },
+  { name: "Sport", href: "/product?category=Sport" },
+  { name: "Sci-Fi", href: "/product?category=Sci-Fi" },
 ];
 
 const blogCategories = [
@@ -38,7 +38,7 @@ const blogCategories = [
 const navLinks = [
   { name: 'Home', href: '/' },
   { name: 'Font Bundle', href: '/bundles' },
-  { name: 'Product', href: '/fonts', hasMegaMenu: true },
+  { name: 'Product', href: '/product', hasMegaMenu: true },
   { name: 'Logotype', href: '/logotype' },
   { name: 'Font Pairing', href: '/font-pair' },
   { name: 'Subscription', href: '/subscription' },
