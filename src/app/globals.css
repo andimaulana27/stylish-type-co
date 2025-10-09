@@ -1,0 +1,74 @@
+/* src/app/globals.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+}
+
+/* PERBAIKAN DI SINI */
+html {
+  -webkit-text-size-adjust: 100%;
+  /* 1. Tambahkan ini untuk menskalakan seluruh UI secara proporsional */
+  font-size: 13.6px; /* 85% dari 16px */
+  scrollbar-gutter: stable;
+}
+
+body {
+  background-color: #121212;
+  color: #FFFFFF;
+  margin: 0;
+  padding: 0;
+  
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ... sisa kode @font-face tetap sama ... */
+
+
+* {
+  box-sizing: border-box;
+}
+
+::-webkit-scrollbar {
+  width: 8px; /* Lebar scrollbar */
+}
+
+::-webkit-scrollbar-track {
+  background: #171717; /* Warna track (brand-dark-secondary) */
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2A2A2A; /* Warna thumb/pegangan (brand-gray-light) */
+  border-radius: 4px; /* Sudut membulat */
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #f47253; /* Warna thumb saat di-hover (brand-accent) */
+}
+
+/* Untuk Firefox */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: #2A2A2A #171717;
+}
+
+.adsbygoogle {
+  display: block;
+  background-color: rgba(255, 255, 255, 0.03); /* Warna placeholder samar */
+  border-radius: 8px;
+}
+
+/* Ukuran untuk banner horizontal di desktop & tablet */
+.adsbygoogle[data-ad-format="fluid"] {
+  width: 100%;
+  min-height: 90px;
+}
+
+/* Ukuran untuk banner horizontal di mobile */
+.adsbygoogle-vertical {
+  width: 100%; /* Mengisi lebar kolom sidebar */
+  min-height: 600px; /* Tinggi standar untuk iklan vertikal */
+}
