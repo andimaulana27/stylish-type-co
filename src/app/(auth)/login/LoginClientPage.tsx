@@ -12,8 +12,6 @@ import { useAuth } from '@/context/AuthContext';
 import RegistrationSuccessModal from '@/components/auth/RegistrationSuccessModal';
 import VerificationSuccessModal from '@/components/auth/VerificationSuccessModal';
 
-// Bagian Metadata yang menyebabkan error sudah dihapus dari file ini
-
 const Separator = () => (
   <div className="flex items-center gap-4 my-6">
     <div className="h-px flex-grow bg-white/10"></div>
@@ -22,7 +20,6 @@ const Separator = () => (
   </div>
 );
 
-// Ganti nama fungsi dari LoginPage menjadi LoginClientPage
 export default function LoginClientPage() {
   const [isRegisterView, setIsRegisterView] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -128,7 +125,7 @@ export default function LoginClientPage() {
 
       <div className="flex flex-col items-center text-center w-full">
         <h1 className="text-5xl md:text-5xl font-semibold text-brand-light">
-          Welcome to Timeless Type
+          Welcome to Stylish Type
         </h1>
         <div className="w-24 h-1 bg-brand-accent mx-auto my-6 rounded-full"></div>
         <p className="text-lg text-brand-light-muted max-w-xl">
@@ -213,7 +210,7 @@ export default function LoginClientPage() {
                 </div>
                 <div className={`absolute transition-opacity duration-500 ${isRegisterView ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
                   <h2 className="text-3xl font-semibold">New Here? Let&apos;s Get Started.</h2>
-                  <p className="mt-4 text-sm font-light text-brand-light-muted">Join TimelessType to download premium fonts, explore curated bundles, and unlock creative benefits.</p>
+                  <p className="mt-4 text-sm font-light text-brand-light-muted">Join Stylish Type to download premium fonts, explore curated bundles, and unlock creative benefits.</p>
                   <button 
                     onClick={() => setIsRegisterView(false)}
                     className={overlayButtonClasses}>
@@ -232,7 +229,7 @@ export default function LoginClientPage() {
             <Link href="/privacy" className="hover:text-brand-accent">Privacy Policy</Link>
           </div>
           <p className="text-md text-brand-light-muted/50 mt-2">
-            © {new Date().getFullYear()} Timelesstype.co. All Rights Reserved.
+            © {new Date().getFullYear()} Stylishtype.co. All Rights Reserved.
           </p>
         </div>
       </div>

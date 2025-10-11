@@ -118,7 +118,6 @@ const EditBundleForm = ({ bundle }: { bundle: BundleWithFonts }) => {
         }
       `}</style>
       <form onSubmit={handleSubmit} className="bg-brand-darkest p-8 rounded-lg border border-white/10 space-y-8">
-        {/* --- PERBAIKAN: SELURUH KONTEN FORM DIKEMBALIKAN --- */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="space-y-2 group">
             <label htmlFor="name" className={labelStyles}>Bundle Name *</label>
@@ -173,7 +172,6 @@ const EditBundleForm = ({ bundle }: { bundle: BundleWithFonts }) => {
               </div>
           </div>
         )}
-        {/* --- AKHIR KONTEN FORM --- */}
         <div className="border-t border-white/10 pt-6 flex justify-end">
           <button type="submit" disabled={isPending || isGalleryUploading} className="px-8 py-3 bg-brand-accent text-brand-darkest font-semibold rounded-lg flex items-center gap-2 transition-all duration-300 ease-in-out hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed">
               {(isPending || isGalleryUploading) && <Loader2 className="animate-spin" size={20} />}

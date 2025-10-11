@@ -23,7 +23,7 @@ export default function PurchasedProductCard({ product }: { product: Product }) 
 
   const href = product.type === 'bundle' 
     ? `/bundles/${product.slug}` 
-    : `/fonts/${product.slug}`;
+    : `/product/${product.slug}`;
 
   // --- FUNGSI DOWNLOAD DIPERBARUI ---
   const handleDownload = async (e: React.MouseEvent) => {

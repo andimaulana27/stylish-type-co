@@ -59,7 +59,7 @@ const LogotypeCard = ({ font, previewText }: LogotypeCardProps) => {
 
   return (
     <Link 
-      href={`/fonts/${font.slug}`}
+      href={`/product/${font.slug}`}
       className="text-center group p-4 rounded-lg transition-all duration-300 ease-in-out hover:bg-white/5 hover:scale-105"
     >
       <div

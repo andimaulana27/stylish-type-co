@@ -166,7 +166,7 @@ export const AdminOrderNotificationEmail: React.FC<AdminOrderNotificationEmailPr
                     <td style={contentContainerStyle}>
                       <h1 style={headingStyle}>Great news: You just made a sale!</h1>
                       <p style={textStyle}>
-                        An order has been placed on Timeless Type. Here are the details:
+                        An order has been placed on Stylish Type. Here are the details:
                       </p>
 
                       <div style={detailsContainerStyle}>
@@ -187,7 +187,7 @@ export const AdminOrderNotificationEmail: React.FC<AdminOrderNotificationEmailPr
                                   )}
                                   <div>
                                       {p.slug && p.type ? (
-                                          <a href={`${siteUrl}/${p.type === 'font' ? 'fonts' : 'bundles'}/${p.slug}`} style={productTitleLinkStyle}>
+                                          <a href={`${siteUrl}/${p.type === 'font' ? 'product' : 'bundles'}/${p.slug}`} style={productTitleLinkStyle}>
                                             {p.name}
                                           </a>
                                       ) : (
@@ -218,7 +218,7 @@ export const AdminOrderNotificationEmail: React.FC<AdminOrderNotificationEmailPr
 
               {/* === FOOTER === */}
               <div style={footerStyle}>
-                  This is an automated notification for Timeless Type administrators.
+                  This is an automated notification for Stylish Type administrators.
               </div>
             </td>
           </tr>

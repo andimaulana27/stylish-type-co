@@ -7,7 +7,6 @@ import ContactFormEmail from '@/components/emails/ContactFormEmail';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-// Skema validasi menggunakan Zod
 const contactSchema = z.object({
   name: z.string().min(2, 'Name is required.'),
   email: z.string().email('Invalid email address.'),
@@ -15,7 +14,6 @@ const contactSchema = z.object({
   message: z.string().min(10, 'Message must be at least 10 characters.'),
 });
 
-// --- PERBAIKAN 1: Tentukan tipe state yang lebih spesifik daripada 'any' ---
 type State = {
   errors?: {
     name?: string[];
@@ -27,7 +25,6 @@ type State = {
   success?: boolean;
 };
 
-// Server Action untuk mengirim email
 export async function sendContactEmailAction(prevState: State, formData: FormData) {
   const validatedFields = contactSchema.safeParse({
     name: formData.get('name'),
@@ -36,7 +33,6 @@ export async function sendContactEmailAction(prevState: State, formData: FormDat
     message: formData.get('message'),
   });
 
-  // Jika validasi gagal, kembalikan error
   if (!validatedFields.success) {
     return {
       errors: validatedFields.error.flatten().fieldErrors,
@@ -47,11 +43,9 @@ export async function sendContactEmailAction(prevState: State, formData: FormDat
   const { name, email, subject, message } = validatedFields.data;
 
   try {
-    // --- PERBAIKAN 3: Hapus variabel 'data' yang tidak digunakan ---
     const { error } = await resend.emails.send({
-      from: 'Contact Form <support@timelesstype.co>',
-      to: ['support@timelesstype.co'],
-      // --- PERBAIKAN 2: Ubah 'reply_to' menjadi 'replyTo' (camelCase) ---
+      from: 'Contact Form <support@stylishtype.co>',
+      to: ['support@stylishtype.co'],
       replyTo: email,
       subject: `[Contact Form] - ${subject}`,
       react: ContactFormEmail({

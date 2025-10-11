@@ -192,7 +192,7 @@ export const OrderConfirmationEmail: React.FC<OrderConfirmationEmailProps> = ({
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
                                     <img src={p.imageUrl} alt={p.name} width="96" height="64" style={{ borderRadius: '2px', marginRight: '16px', objectFit: 'cover', aspectRatio: '3/2' }} />
                                     <div>
-                                        <a href={`${siteUrl}/${p.type === 'font' ? 'fonts' : 'bundles'}/${p.slug}`} style={productTitleLinkStyle}>
+                                        <a href={`${siteUrl}/${p.type === 'font' ? 'product' : 'bundles'}/${p.slug}`} style={productTitleLinkStyle}>
                                             {p.name}
                                         </a>
                                         <span style={{ fontSize: '12px', color: '#4b5563', display: 'block' }}>{p.license} License</span>
@@ -257,7 +257,7 @@ export const OrderConfirmationEmail: React.FC<OrderConfirmationEmailProps> = ({
               {/* === FOOTER === */}
               <div style={footerStyle}>
                   <p>Your Invoice and End User License Agreement (EULA) are attached for your records.</p>
-                  © {new Date().getFullYear()} Timelesstype.co. All Rights Reserved.
+                  © {new Date().getFullYear()} Stylishtype.co. All Rights Reserved.
               </div>
             </td>
           </tr>

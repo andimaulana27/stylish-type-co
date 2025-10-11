@@ -23,7 +23,7 @@ const FeaturedProductsSection = ({ featuredProductsData }: { featuredProductsDat
                     ))}
                 </div>
                 <div className="text-center mt-16">
-                    <Button href="/fonts">
+                    <Button href="/product">
                         Explore All Font
                     </Button>
                 </div>

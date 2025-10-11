@@ -126,7 +126,7 @@ export const SubscriptionConfirmationEmail: React.FC<SubscriptionConfirmationEma
                       </p>
 
                       <div style={{ textAlign: 'center' }}>
-                        <a href={`${siteUrl}/fonts`} style={buttonStyle}>
+                        <a href={`${siteUrl}/product`} style={buttonStyle}>
                           Explore The Font Library
                         </a>
                       </div>
@@ -151,7 +151,7 @@ export const SubscriptionConfirmationEmail: React.FC<SubscriptionConfirmationEma
               {/* === FOOTER === */}
               <div style={footerStyle}>
                   <p>Your Invoice and End User License Agreement (EULA) are attached for your records.</p>
-                  © {new Date().getFullYear()} Timelesstype.co. All Rights Reserved.
+                  © {new Date().getFullYear()} Stylishtype.co. All Rights Reserved.
               </div>
             </td>
           </tr>

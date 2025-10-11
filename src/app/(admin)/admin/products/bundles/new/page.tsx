@@ -197,7 +197,7 @@ export default function AddNewBundlePage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="space-y-2 group">
                             <label htmlFor="name" className={labelStyles}>Bundle Name *</label>
-                            <input type="text" id="name" name="name" required className={inputStyles} placeholder="e.g., Timeless Vintage Bundle" value={bundleName} onChange={(e) => setBundleName(e.target.value)} />
+                            <input type="text" id="name" name="name" required className={inputStyles} placeholder="e.g., Stylish Vintage Bundle" value={bundleName} onChange={(e) => setBundleName(e.target.value)} />
                         </div>
                         <div className="space-y-2 group">
                             <label htmlFor="slug" className={labelStyles}>Bundle Slug (Auto-generated)</label>

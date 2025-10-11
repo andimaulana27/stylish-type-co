@@ -10,7 +10,7 @@ const AuthFooter = () => {
         <Link href="/privacy" className="hover:text-brand-accent-green">Privacy Policy</Link>
       </div>
       <p className="text-xs text-brand-light-muted/50 mt-2">
-        © {new Date().getFullYear()} Timelesstype.co. All Rights Reserved.
+        © {new Date().getFullYear()} Stylishtype.co. All Rights Reserved.
       </p>
     </footer>
   );

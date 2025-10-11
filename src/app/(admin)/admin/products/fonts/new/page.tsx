@@ -12,7 +12,6 @@ import RichTextEditor from '@/components/admin/RichTextEditor';
 import { addFontAction } from '@/app/actions/productActions';
 import GalleryImageUploader from '@/components/admin/GalleryImageUploader';
 import { useCallback } from 'react';
-// --- PERUBAHAN DI SINI ---
 import { getPartnerListAction } from '@/app/actions/partnerActions';
 
 const MIN_FILES = 0;
@@ -20,7 +19,6 @@ const MIN_FILES = 0;
 type PreviewFont = { name: string; styleName: string; fontFamily: string; url: string; };
 type Partner = { id: string; name: string };
 const categories = ["Serif Display", "Sans Serif", "Slab Serif", "Groovy", "Script", "Blackletter", "Western", "Sport", "Sci-Fi"];
-// --- AKHIR PERUBAHAN ---
 
 export default function AddNewFontPage() {
     const [isPending, startTransition] = useTransition();
@@ -45,7 +43,6 @@ export default function AddNewFontPage() {
     const [galleryImageUrls, setGalleryImageUrls] = useState<string[]>([]);
     const [isGalleryUploading, setIsGalleryUploading] = useState(false);
 
-    // --- PERUBAHAN DI SINI ---
     const [partners, setPartners] = useState<Partner[]>([]);
     const [selectedPartner, setSelectedPartner] = useState<Partner | null>(null);
 
@@ -58,7 +55,6 @@ export default function AddNewFontPage() {
         };
         fetchPartners();
     }, []);
-    // --- AKHIR PERUBAHAN ---
     
     useEffect(() => {
         const generatedSlug = fontName
@@ -81,7 +77,6 @@ export default function AddNewFontPage() {
         setIsGalleryUploading(isUploading);
     }, []);
 
-    // Tag handlers
     const addTags = (tagString: string) => {
         const newTags = tagString.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0 && !tags.includes(tag));
         if (newTags.length > 0) setTags([...tags, ...newTags]);
@@ -200,9 +195,7 @@ export default function AddNewFontPage() {
         startTransition(async () => {
             const formData = new FormData(event.currentTarget);
             formData.set('category', selectedCategory);
-            // --- PERUBAHAN DI SINI ---
             formData.set('partner_id', selectedPartner?.id || '');
-            // --- AKHIR PERUBAHAN ---
             formData.set('tags', tags.join(','));
             formData.set('purpose_tags', purposeTags.join(','));
             formData.set('main_description', mainDescription);
@@ -225,6 +218,7 @@ export default function AddNewFontPage() {
         });
     };
     
+    const isUploading = isGalleryUploading;
     const inputStyles = "w-full bg-white/5 border border-transparent rounded-full px-4 py-3 text-brand-light placeholder:text-brand-light-muted transition-colors duration-300 focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent hover:border-brand-accent/50";
     const labelStyles = "block text-sm font-medium text-brand-light-muted mb-2 group-hover:text-brand-accent transition-colors";
 
@@ -274,8 +268,7 @@ export default function AddNewFontPage() {
                             <input type="number" id="price" name="price" required min="0" step="0.01" className={inputStyles} placeholder="e.g., 19.00" />
                         </div>
                     </div>
-
-                    {/* --- PERUBAHAN DI SINI: Dropdown partner ditambahkan --- */}
+                    
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
                          <div className="space-y-2 group">
                              <label htmlFor="category" className={labelStyles}>Category *</label>
@@ -303,7 +296,7 @@ export default function AddNewFontPage() {
                                 {({ open }) => (
                                 <div className="relative">
                                     <Listbox.Button className={`${inputStyles} text-left flex justify-between items-center`}>
-                                        <span className={selectedPartner ? 'text-brand-light' : 'text-brand-light-muted'}>{selectedPartner?.name || 'Timeless Type (Default)'}</span>
+                                        <span className={selectedPartner ? 'text-brand-light' : 'text-brand-light-muted'}>{selectedPartner?.name || 'Stylish Type (Default)'}</span>
                                         <ChevronDown size={20} className={`transition-transform duration-200 ${open ? 'rotate-180 text-brand-accent' : 'text-brand-light-muted'}`} />
                                     </Listbox.Button>
                                     <Transition as={Fragment} leave="transition ease-in duration-100" leaveFrom="opacity-100" leaveTo="opacity-0">
@@ -312,7 +305,7 @@ export default function AddNewFontPage() {
                                                 className={({ active }) => `cursor-pointer select-none relative py-2 pl-10 pr-4 ${active ? 'bg-brand-accent text-brand-darkest' : 'text-brand-light'}`}
                                                 value={null}
                                             >
-                                                {({ selected }) => ( <> <span className={`block truncate ${selected ? 'font-medium' : 'font-normal'}`}>Timeless Type (Default)</span> {selected ? (<span className="absolute inset-y-0 left-0 flex items-center pl-3 text-brand-accent"><Check size={20} aria-hidden="true" /></span>) : null} </>)}
+                                                {({ selected }) => ( <> <span className={`block truncate ${selected ? 'font-medium' : 'font-normal'}`}>Stylish Type (Default)</span> {selected ? (<span className="absolute inset-y-0 left-0 flex items-center pl-3 text-brand-accent"><Check size={20} aria-hidden="true" /></span>) : null} </>)}
                                             </Listbox.Option>
                                             {partners.map((partner) => ( <Listbox.Option key={partner.id} className={({ active }) => `cursor-pointer select-none relative py-2 pl-10 pr-4 ${active ? 'bg-brand-accent text-brand-darkest' : 'text-brand-light'}`} value={partner}>
                                                 {({ selected }) => ( <> <span className={`block truncate ${selected ? 'font-medium' : 'font-normal'}`}>{partner.name}</span> {selected ? (<span className="absolute inset-y-0 left-0 flex items-center pl-3 text-brand-accent"><Check size={20} aria-hidden="true" /></span>) : null} </>)}
@@ -324,7 +317,6 @@ export default function AddNewFontPage() {
                             </Listbox>
                         </div>
                     </div>
-                    {/* --- AKHIR PERUBAHAN --- */}
 
                     <div className="space-y-2 group">
                         <label htmlFor="tags-input" className={labelStyles}>Style Tags (Press Enter or Comma)</label>

@@ -38,7 +38,7 @@ const FontListCard = ({ font, previewText, fontSize }: FontListCardProps) => {
       {regularFont && <DynamicFontLoader fontFamily={dynamicFontFamily} fontUrl={regularFont.url} />}
       <div className="group/card flex flex-col md:flex-row items-start w-full gap-8 py-6 border-b border-white/10">
         <div className="w-full md:w-1/4 flex-shrink-0">
-          <Link href={`/fonts/${font.slug}`}>
+          <Link href={`/product/${font.slug}`}>
             <div className="relative w-full aspect-[3/2] rounded-lg overflow-hidden bg-brand-gray-light">
               <Image
                 src={font.imageUrl}
@@ -55,7 +55,7 @@ const FontListCard = ({ font, previewText, fontSize }: FontListCardProps) => {
             <div>
               {/* --- PERBAIKAN: Judul dikembalikan untuk menampilkan nama LENGKAP --- */}
               <h3 className="font-medium text-lg text-brand-light transition-colors duration-300 group-hover/card:text-brand-accent">
-                <Link href={`/fonts/${font.slug}`}>{font.name}</Link>
+                <Link href={`/product/${font.slug}`}>{font.name}</Link>
               </h3>
               <p className="text-sm text-brand-light-muted mt-1">{font.description}</p>
             </div>

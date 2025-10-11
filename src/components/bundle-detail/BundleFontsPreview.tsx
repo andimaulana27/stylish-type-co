@@ -73,7 +73,7 @@ const FontFamilyRow = ({ family, previewText, activeStyle, fontSize, lineHeight,
       ))}
       <div className="block group/row">
         {family.slug ? (
-          <Link href={`/fonts/${family.slug}`} className="block">
+          <Link href={`/product/${family.slug}`} className="block">
             {content}
           </Link>
         ) : (

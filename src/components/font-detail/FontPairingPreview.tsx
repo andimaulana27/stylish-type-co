@@ -150,7 +150,7 @@ const FontPairingPreview = ({ allFonts }: FontPairingPreviewProps) => {
                   aria-label="Headline preview text"
               />
               {headlineState.font?.slug && (
-                  <Button href={`/fonts/${headlineState.font.slug}`} className="flex-shrink-0 !py-2.5 !px-6 text-sm">
+                  <Button href={`/product/${headlineState.font.slug}`} className="flex-shrink-0 !py-2.5 !px-6 text-sm">
                       Get This Font
                   </Button>
               )}
@@ -166,7 +166,7 @@ const FontPairingPreview = ({ allFonts }: FontPairingPreviewProps) => {
                   aria-label="Subheadline preview text"
               />
               {subheadlineState.font?.slug && (
-                  <Button href={`/fonts/${subheadlineState.font.slug}`} className="flex-shrink-0 !py-2.5 !px-6 text-sm">
+                  <Button href={`/product/${subheadlineState.font.slug}`} className="flex-shrink-0 !py-2.5 !px-6 text-sm">
                       Get This Font
                   </Button>
               )}

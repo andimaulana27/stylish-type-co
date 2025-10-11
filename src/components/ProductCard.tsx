@@ -40,7 +40,7 @@ const ProductCard = ({ font, className = '', style, priority = false }: ProductC
 
   const href = font.type === 'bundle' 
     ? `/bundles/${font.slug}` 
-    : `/fonts/${font.slug}`;
+    : `/product/${font.slug}`;
 
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();

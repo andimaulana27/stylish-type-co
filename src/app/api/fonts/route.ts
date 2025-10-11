@@ -52,7 +52,8 @@ export async function GET(request: NextRequest) {
         if (partnerId) {
             query = query.eq('partner_id', partnerId);
         } else if (partnerSlug) {
-            if (partnerSlug === 'timeless-type') {
+            // --- PERUBAHAN DI SINI ---
+            if (partnerSlug === 'stylishtype') {
                 query = query.is('partner_id', null);
             }
         }
@@ -119,10 +120,8 @@ export async function GET(request: NextRequest) {
             };
         });
         
-        // --- OPTIMASI DI SINI ---
-        // Membuat respons baru untuk menambahkan header caching
         const response = NextResponse.json({ fonts: formattedFonts, totalPages });
-        response.headers.set('Cache-Control', 's-maxage=600, stale-while-revalidate=3000'); // Cache di CDN selama 10 menit
+        response.headers.set('Cache-Control', 's-maxage=600, stale-while-revalidate=3000');
         return response;
 
     } catch (error) {

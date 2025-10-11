@@ -1,4 +1,4 @@
-'use client';
+'use client'; 
 
 import { useState, useTransition, useMemo, useEffect, FormEvent, Fragment, useCallback } from 'react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
@@ -56,7 +56,7 @@ const FontActions = ({ font, onDelete }: { font: Font, onDelete: (id: string) =>
   };
   return (
     <div className="flex items-center justify-end gap-1">
-      <Link href={`/fonts/${font.slug}`} target="_blank" className="p-2 text-brand-secondary-green hover:bg-white/10 rounded-md" title="View"><Eye size={16} /></Link>
+      <Link href={`/product/${font.slug}`} target="_blank" className="p-2 text-brand-secondary-green hover:bg-white/10 rounded-md" title="View"><Eye size={16} /></Link>
       <Link href={`/admin/products/fonts/${font.id}/edit`} className="p-2 text-brand-secondary-gold hover:bg-white/10 rounded-md" title="Edit Page"><Edit size={16} /></Link>
       <button onClick={handleDelete} disabled={isDeleting} className="p-2 text-brand-secondary-red hover:bg-white/10 rounded-md disabled:opacity-50" title="Delete">
         {isDeleting ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
@@ -65,7 +65,6 @@ const FontActions = ({ font, onDelete }: { font: Font, onDelete: (id: string) =>
   );
 }
 
-// Komponen sekarang menerima data awal sebagai props
 interface FontsClientProps {
   initialFonts: Font[];
   initialTotalPages: number;
@@ -73,12 +72,10 @@ interface FontsClientProps {
 }
 
 export default function FontsClient({ initialFonts, initialTotalPages, initialDiscounts }: FontsClientProps) {
-  // Gunakan props untuk inisialisasi state
   const [fonts, setFonts] = useState<Font[]>(initialFonts);
   const [totalPages, setTotalPages] = useState(initialTotalPages);
   const [discounts, setDiscounts] = useState<Discount[]>(initialDiscounts);
 
-  // State lainnya tetap sama
   const [selectedFonts, setSelectedFonts] = useState<string[]>([]);
   const [isPending, startTransition] = useTransition();
   const [editingFontId, setEditingFontId] = useState<string | null>(null);
@@ -95,16 +92,14 @@ export default function FontsClient({ initialFonts, initialTotalPages, initialDi
   const searchTerm = searchParams.get('search') || '';
   const selectedCategory = searchParams.get('category') || 'All';
 
-  // useEffect ini memastikan state di-update jika props berubah (misal saat paginasi)
   useEffect(() => {
     setFonts(initialFonts);
     setTotalPages(initialTotalPages);
   }, [initialFonts, initialTotalPages]);
 
-  // Fungsi untuk me-refresh data dari server
   const refreshData = () => {
       router.refresh();
-      setSelectedFonts([]); // Kosongkan pilihan saat data di-refresh
+      setSelectedFonts([]);
   };
 
   const fetchDiscounts = useCallback(async () => {
@@ -157,7 +152,7 @@ export default function FontsClient({ initialFonts, initialTotalPages, initialDi
         )
      });
   };
-
+  
   const handleApplyDiscountToAll = (discountId: string | null) => {
     const actionMessage = discountId ? "apply this discount to all fonts" : "remove discounts from all fonts";
     if (window.confirm(`Are you sure you want to ${actionMessage}? This will affect every font in the database.`)) {

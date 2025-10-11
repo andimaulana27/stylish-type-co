@@ -4,8 +4,8 @@ import LoginClientPage from './LoginClientPage'; // Impor komponen client yang b
 
 // Di sini kita bisa mengekspor metadata dengan aman
 export const metadata: Metadata = {
-  title: 'Login or Create Account | Timeless Type',
-  description: 'Sign in to your Timeless Type account to access your purchased fonts and manage your subscription, or create a new account to start your creative journey.',
+  title: 'Login or Create Account | Stylish Type',
+  description: 'Sign in to your Stylish Type account to access your purchased fonts and manage your subscription, or create a new account to start your creative journey.',
 };
 
 // Halaman ini sekarang adalah Server Component

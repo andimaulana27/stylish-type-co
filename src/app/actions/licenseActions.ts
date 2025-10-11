@@ -21,8 +21,6 @@ const createSupabaseActionClient = () => {
     );
 };
 
-// --- FUNGSI BARU DITAMBAHKAN ---
-// Mengambil detail lisensi "Standard" untuk digunakan pada tombol "Add to Cart" cepat.
 export async function getStandardLicenseAction() {
     const supabase = createSupabaseActionClient();
     try {
@@ -33,7 +31,7 @@ export async function getStandardLicenseAction() {
             .single();
 
         if (error) {
-            if (error.code === 'PGRST116') { // Kode untuk "no rows found"
+            if (error.code === 'PGRST116') {
                 return { error: 'Standard license configuration not found in the database.' };
             }
             throw error;
@@ -46,7 +44,6 @@ export async function getStandardLicenseAction() {
         return { error: 'An unexpected error occurred.' };
     }
 }
-// --- AKHIR FUNGSI BARU ---
 
 export async function getLicensesAction() {
     const supabase = createSupabaseActionClient();
@@ -100,7 +97,7 @@ export async function updateLicenseAction(licenseId: string, formData: FormData)
         if (error) throw error;
 
         revalidatePath('/admin/licenses');
-        revalidatePath('/fonts', 'layout'); 
+        revalidatePath('/product', 'layout'); 
         revalidatePath('/bundles', 'layout');
         return { success: 'License updated successfully.', license: data };
     } catch (error: unknown) {

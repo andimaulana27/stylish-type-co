@@ -27,7 +27,7 @@ const DiscountLabel = ({ discount }: { discount: string }) => (
 );
 
 const SearchSuggestionItem = ({ product, onClose }: SuggestionItemProps) => {
-    const href = product.type === 'bundle' ? `/bundles/${product.slug}` : `/fonts/${product.slug}`;
+    const href = product.type === 'bundle' ? `/bundles/${product.slug}` : `/product/${product.slug}`;
     
     return (
       <Link href={href} className="flex items-start gap-4 group/item p-2 -m-2 rounded-lg hover:bg-white/5 transition-colors" onClick={onClose}>

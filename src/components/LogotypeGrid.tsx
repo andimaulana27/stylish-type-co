@@ -47,7 +47,7 @@ export default function LogotypeGrid({ allLogotypeFonts }: LogotypeGridProps) {
               {paginatedFonts.map((font, index) => (
                 <LogotypeCard 
                   key={`${font.slug}-${index}`} 
-                  font={font} 
+                  font={{...font, slug: font.slug.replace('/fonts/', '/product/')}}
                   // --- PERBAIKAN DI SINI: Hanya teruskan `previewText` dari input pengguna ---
                   previewText={previewText} 
                 />

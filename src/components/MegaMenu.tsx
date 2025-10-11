@@ -17,16 +17,16 @@ import SportIcon from './icons/menu/SportIcon';
 import SciFiIcon from './icons/menu/SciFiIcon';
 
 const categories = [
-  { name: "All fonts", href: "/fonts", IconComponent: AllFontsIcon },
-  { name: "Serif Display", href: "/fonts?category=Serif+Display", IconComponent: SerifDisplayIcon },
-  { name: "Sans Serif", href: "/fonts?category=Sans+Serif", IconComponent: SansSerifIcon },
-  { name: "Slab Serif", href: "/fonts?category=Slab+Serif", IconComponent: SlabSerifIcon },
-  { name: "Groovy", href: "/fonts?category=Groovy", IconComponent: GroovyIcon },
-  { name: "Script", href: "/fonts?category=Script", IconComponent: ScriptIcon },
-  { name: "Blackletter", href: "/fonts?category=Blackletter", IconComponent: BlackletterIcon },
-  { name: "Western", href: "/fonts?category=Western", IconComponent: WesternIcon },
-  { name: "Sport", href: "/fonts?category=Sport", IconComponent: SportIcon },
-  { name: "Sci-Fi", href: "/fonts?category=Sci-Fi", IconComponent: SciFiIcon },
+  { name: "All fonts", href: "/product", IconComponent: AllFontsIcon },
+  { name: "Serif Display", href: "/product?category=Serif+Display", IconComponent: SerifDisplayIcon },
+  { name: "Sans Serif", href: "/product?category=Sans+Serif", IconComponent: SansSerifIcon },
+  { name: "Slab Serif", href: "/product?category=Slab+Serif", IconComponent: SlabSerifIcon },
+  { name: "Groovy", href: "/product?category=Groovy", IconComponent: GroovyIcon },
+  { name: "Script", href: "/product?category=Script", IconComponent: ScriptIcon },
+  { name: "Blackletter", href: "/product?category=Blackletter", IconComponent: BlackletterIcon },
+  { name: "Western", href: "/product?category=Western", IconComponent: WesternIcon },
+  { name: "Sport", href: "/product?category=Sport", IconComponent: SportIcon },
+  { name: "Sci-Fi", href: "/product?category=Sci-Fi", IconComponent: SciFiIcon },
 ];
 
 const MegaMenu = async () => {
@@ -57,7 +57,7 @@ const MegaMenu = async () => {
           <div className="space-y-6">
             {latestFonts.map(font => (
               // --- PERBAIKAN DI SINI ---
-              <Link href={`/fonts/${font.slug}`} key={font.id} className="flex items-start gap-4 group/item p-3 -m-3 rounded-lg hover:bg-white/5 transition-all duration-200" prefetch={true}>
+              <Link href={`/product/${font.slug}`} key={font.id} className="flex items-start gap-4 group/item p-3 -m-3 rounded-lg hover:bg-white/5 transition-all duration-200" prefetch={true}>
                 <div className="flex-shrink-0 relative">
                   <Image src={font.imageUrl} alt={font.name} width={160} height={100} className="rounded-md bg-brand-gray-light object-cover aspect-[3/2]" />
                   {font.discount && <DiscountLabel discount={font.discount} />}

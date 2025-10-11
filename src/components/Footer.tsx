@@ -124,7 +124,7 @@ const Footer = () => {
           <div className="md:col-span-3 space-y-8 flex flex-col items-center md:items-start text-center md:text-left">
             <div>
                <Link href="/" aria-label="Back to Homepage">
-                <Image src="/LOGO BARU ORANGE.svg" alt="Timeless Type Logo" width={280} height={40} priority />
+                <Image src="/LOGO BARU ORANGE.svg" alt="Stylish Type Logo" width={280} height={40} priority />
                </Link>
               <p className="mt-4 font-light text-sm max-w-xs">
                 Discover premium fonts that elevate your designs.
@@ -145,7 +145,7 @@ const Footer = () => {
                     <PaymentIcon IconComponent={MastercardIcon} />
                 </div>
                 <p className="text-xs text-brand-light-muted/50 mt-4">
-                    © {new Date().getFullYear()} <span className="text-brand-accent">Timelesstype.co</span>. All rights reserved.
+                    © {new Date().getFullYear()} <span className="text-brand-accent">Stylishtype.co</span>. All rights reserved.
                 </p>
             </div>
           </div>
@@ -155,7 +155,7 @@ const Footer = () => {
             <ul className="space-y-0 font-light text-sm">
               {allFontCategories.map(category => (
                  <li key={category} className="border-b border-brand-gray-light/50 last:border-b-0">
-                    <Link href={`/fonts?category=${encodeURIComponent(category)}`} className="block py-2.5 hover:text-brand-accent transition-colors">{category}</Link>
+                    <Link href={`/product?category=${encodeURIComponent(category)}`} className="block py-2.5 hover:text-brand-accent transition-colors">{category}</Link>
                  </li>
               ))}
             </ul>

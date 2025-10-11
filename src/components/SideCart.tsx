@@ -33,7 +33,7 @@ const SideCart = ({ children }: { children: React.ReactNode }) => {
               {/* --- PERBAIKAN: Tombol dipindahkan ke sini --- */}
               <div className="px-6 mt-2 text-center">
                 <Link 
-                    href="/fonts" 
+                    href="/product" 
                     onClick={closeCartSidebar} 
                     className="px-6 py-2 font-medium rounded-full text-sm bg-brand-accent text-brand-darkest transition-all"
                 >

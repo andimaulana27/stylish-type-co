@@ -26,7 +26,7 @@ const CheckoutSuccessModal = ({ isOpen, onClose, isSubscription = false }: Check
   let primaryMessage = "Your purchase has been completed successfully.";
   let secondaryMessage = "A confirmation email has been sent with your download links. You can also access your files anytime from your account library.";
   let primaryButtonText = "Tutorial";
-  let primaryButtonLink = "/blog/from-browse-to-download-your-guide-to-purchasing-fonts-on-timeless-type";
+  let primaryButtonLink = "/blog/from-browse-to-download-your-guide-to-purchasing-fonts-on-stylishtype";
   let secondaryButtonText = "Go to My Library";
   let secondaryButtonLink = "/account/my-fonts";
 

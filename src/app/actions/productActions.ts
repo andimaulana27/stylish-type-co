@@ -514,7 +514,7 @@ export async function addFontAction(formData: FormData) {
   }
 
   revalidatePath('/admin/products/fonts');
-  revalidatePath('/fonts');
+  revalidatePath('/product');
   redirect('/admin/products/fonts');
 }
 
@@ -553,7 +553,7 @@ export async function updateFontAction(fontId: string, formData: FormData) {
   }
 
   revalidatePath('/admin/products/fonts');
-  revalidatePath(`/fonts/${slug}`);
+  revalidatePath(`/product/${slug}`);
   revalidatePath(`/admin/products/fonts/${fontId}/edit`);
 }
 
@@ -618,7 +618,7 @@ export async function deleteFontAction(fontId: string) {
     }
 
     revalidatePath('/admin/products/fonts');
-    revalidatePath('/fonts');
+    revalidatePath('/product');
     return { success: 'Font deleted successfully!' };
 }
 
@@ -735,7 +735,7 @@ export async function bulkApplyDiscountToAllFontsAction(discountId: string | nul
         return { error: 'An unexpected error occurred during bulk discount update for all fonts.' };
     }
     revalidatePath('/admin/products/fonts');
-    revalidatePath('/fonts');
+    revalidatePath('/product');
     return { success: 'Discount successfully applied to all fonts!' };
 }
 

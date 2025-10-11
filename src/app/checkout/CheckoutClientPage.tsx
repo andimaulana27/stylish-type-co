@@ -55,7 +55,7 @@ const OrderSummary = ({ subscriptionPlan, billingCycle, priceDifference }: {
           {isSubscriptionCheckout && subscriptionPlan ? (
             <div className="flex items-center gap-4">
                <div className="w-16 h-16 bg-brand-primary-blue/20 rounded-md flex items-center justify-center">
-                  <Image src="/logo-timeless-type-footer.png" alt="Logo" width={48} height={48} className="opacity-50" />
+                  <Image src="/logo-stylishtype-footer.png" alt="Stylishtype Logo" width={48} height={48} className="opacity-50" />
                </div>
                <div>
                   <p className="font-medium text-brand-light leading-tight">{subscriptionPlan.name}</p>
@@ -111,13 +111,9 @@ export default function CheckoutClientPage({ subscriptionPlan, billingCycle, pri
 
   const handleSuccess = () => {
     setIsModalOpen(true);
-    // --- PERBAIKAN DI SINI: Hapus baris di bawah ini ---
-    // if (!subscriptionPlan) {
-    //   clearCart(); 
-    // }
   };
   
-  if (!subscriptionPlan && cart.length === 0 && !isModalOpen) { // Tambahkan cek !isModalOpen
+  if (!subscriptionPlan && cart.length === 0 && !isModalOpen) {
     return (
       <div className="w-full max-w-2xl mx-auto p-8 bg-brand-darkest rounded-lg border border-white/10 text-center">
         <h1 className="text-3xl font-bold text-brand-accent text-center">Your Cart is Empty</h1>
@@ -125,8 +121,8 @@ export default function CheckoutClientPage({ subscriptionPlan, billingCycle, pri
           Add items to your cart or choose a subscription plan to proceed.
         </p>
         <div className="mt-8">
-          <Link href="/fonts" className="px-8 py-3 font-medium rounded-full text-center bg-brand-accent text-brand-darkest transition-all">
-            Explore Fonts
+          <Link href="/product" className="px-8 py-3 font-medium rounded-full text-center bg-brand-accent text-brand-darkest transition-all">
+            Explore Products
           </Link>
         </div>
       </div>

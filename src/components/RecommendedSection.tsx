@@ -48,7 +48,7 @@ const RecommendedSection = ({ currentProductId }: RecommendedSectionProps) => {
                 <MarqueeRow products={products} animationClass="animate-marquee-reverse-fast" />
                 
                 <div className="text-center mt-16">
-                    <Button href="/fonts">
+                    <Button href="/product">
                         Explore All Fonts
                     </Button>
                 </div>

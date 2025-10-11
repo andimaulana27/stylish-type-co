@@ -95,7 +95,7 @@ const Navbar = ({
             <div className="hidden md:flex items-center justify-between h-24 text-brand-light">
               <div className="flex-shrink-0">
                 <Link href="/" aria-label="Back to Homepage" prefetch={true}>
-                  <Image src="/LOGO BARU ORANGE.svg" alt="Timeless Type Logo" width={210} height={40} priority />
+                  <Image src="/LOGO BARU ORANGE.svg" alt="Stylish Type Logo" width={210} height={40} priority />
                 </Link>
               </div>
               <div className="flex flex-grow items-center justify-center">
@@ -150,7 +150,7 @@ const Navbar = ({
               </div>
               <div className="absolute left-1/2 -translate-x-1/2">
                 <Link href="/" aria-label="Back to Homepage">
-                  <Image src="/LOGO BARU ORANGE.svg" alt="Timeless Type Logo" width={160} height={32} priority />
+                  <Image src="/LOGO BARU ORANGE.svg" alt="Stylish Type Logo" width={160} height={32} priority />
                 </Link>
               </div>
               <div className="flex items-center gap-4">
@@ -177,7 +177,7 @@ const Navbar = ({
         <div className="relative w-4/5 max-w-sm h-full bg-brand-darkest shadow-lg flex flex-col">
           <div className="flex items-center justify-between p-6 border-b border-white/10">
             <Link href="/" onClick={() => setIsMobileMenuOpen(false)}>
-              <Image src="/LOGO BARU ORANGE.svg" alt="Timeless Type Logo" width={150} height={30} />
+              <Image src="/LOGO BARU ORANGE.svg" alt="Stylish Type Logo" width={150} height={30} />
             </Link>
             <button onClick={() => setIsMobileMenuOpen(false)} aria-label="Close menu">
               <X size={24} />

@@ -34,7 +34,7 @@ const DiscountLabel = ({ discount }: { discount: string }) => (
 );
 
 const SuggestionItem = ({ product }: { product: SuggestionProduct }) => {
-  const href = product.type === 'bundle' ? `/bundles/${product.slug}` : `/fonts/${product.slug}`;
+  const href = product.type === 'bundle' ? `/bundles/${product.slug}` : `/product/${product.slug}`;
   
   return (
     <Link 

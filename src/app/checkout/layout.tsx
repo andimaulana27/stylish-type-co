@@ -3,7 +3,7 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Lock } from 'lucide-react';
-import PayPalProvider from '@/context/PayPalProvider'; // <-- Impor provider baru
+import PayPalProvider from '@/context/PayPalProvider';
 
 export default function CheckoutLayout({
   children,
@@ -11,7 +11,6 @@ export default function CheckoutLayout({
   children: React.ReactNode;
 }) {
   return (
-    // --- PERUBAHAN DI SINI: Membungkus dengan PayPalProvider ---
     <PayPalProvider>
       <div className="min-h-screen bg-brand-dark-secondary text-brand-light flex flex-col">
         <header className="py-6 bg-brand-darkest">
@@ -19,7 +18,7 @@ export default function CheckoutLayout({
             <Link href="/" aria-label="Back to Homepage">
               <Image 
                 src="/LOGO BARU ORANGE.svg" 
-                alt="Timeless Type Logo" 
+                alt="Stylishtype Logo" 
                 width={210} 
                 height={40} 
               />
@@ -36,7 +35,7 @@ export default function CheckoutLayout({
         </main>
 
         <footer className="py-6 text-center text-md text-brand-light-muted">
-           <p>© {new Date().getFullYear()} Timelesstype.co. All rights reserved.</p>
+           <p>© {new Date().getFullYear()} Stylishtype.co. All rights reserved.</p>
         </footer>
       </div>
     </PayPalProvider>

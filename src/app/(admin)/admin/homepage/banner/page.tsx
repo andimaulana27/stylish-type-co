@@ -57,7 +57,6 @@ const EditSlideModal = ({ isOpen, onClose, slide, onUpdateSuccess }: {
                 const { data: uploadData, error: uploadError } = await supabase.storage
                     .from('banner_images')
                     .upload(filePath, newSlideFile, {
-                        // --- PERUBAIKAN CACHE KONSISTEN ---
                         cacheControl: '31536000', // 1 tahun
                     });
                 
@@ -184,7 +183,6 @@ export default function ManageBannerPage() {
             const { data: uploadData, error: uploadError } = await supabase.storage
                 .from('banner_images')
                 .upload(filePath, newSlideFile, {
-                    // --- PERUBAIKAN CACHE KONSISTEN ---
                     cacheControl: '31536000', // 1 tahun
                 });
 
@@ -258,7 +256,7 @@ export default function ManageBannerPage() {
                     </div>
                     <div className="space-y-3">
                         <div>
-                            <label htmlFor="link" className="text-xs text-brand-light-muted ml-4">Link URL (e.g., /fonts)</label>
+                            <label htmlFor="link" className="text-xs text-brand-light-muted ml-4">Link URL (e.g., /product)</label>
                             <input id="link" type="text" value={linkHref} onChange={(e) => setLinkHref(e.target.value)} required className={inputStyles} />
                         </div>
                         <div>

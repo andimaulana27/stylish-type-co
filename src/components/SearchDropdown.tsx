@@ -119,7 +119,7 @@ const SearchDropdown = ({ isOpen, onClose, featuredFonts, latestBundles }: Searc
         
         <div className="mt-6 border-t border-brand-gray-light pt-6">
           <Link 
-            href={query.length > 1 ? `/fonts?search=${query}` : "/fonts"}
+            href={query.length > 1 ? `/product?search=${query}` : "/product"}
             onClick={onClose}
             className="block w-full px-8 py-3 font-medium rounded-full text-center bg-brand-accent text-brand-darkest transition-all duration-300 ease-in-out transform hover:shadow-lg hover:shadow-brand-accent/40"
           >

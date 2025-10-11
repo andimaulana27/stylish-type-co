@@ -13,7 +13,7 @@ const AuthNavbar = () => {
             <Image 
               // Logo dan ukuran disamakan dengan halaman checkout
               src="/LOGO BARU ORANGE.svg"
-              alt="Timeless Type Logo"
+              alt="Stylish Type Logo"
               width={210}
               height={40}
               priority
@@ -25,7 +25,7 @@ const AuthNavbar = () => {
             Contact Us
           </Link>
           <Link href="/" className="px-5 py-2.5 font-medium rounded-full text-center text-sm bg-brand-accent text-brand-darkest transition-all duration-300 ease-in-out transform hover:shadow-lg hover:shadow-brand-accent/40">
-            Back to Timeless
+            Back to Stylish Type
           </Link>
         </div>
       </div>
