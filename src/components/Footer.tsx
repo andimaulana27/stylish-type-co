@@ -124,7 +124,8 @@ const Footer = () => {
           <div className="md:col-span-3 space-y-8 flex flex-col items-center md:items-start text-center md:text-left">
             <div>
                <Link href="/" aria-label="Back to Homepage">
-                <Image src="/LOGO BARU ORANGE.svg" alt="Stylish Type Logo" width={280} height={40} priority />
+                 {/* --- PERUBAHAN LOGO FOOTER --- */}
+                 <span className="text-4xl font-bold text-brand-accent">stylishType.co</span>
                </Link>
               <p className="mt-4 font-light text-sm max-w-xs">
                 Discover premium fonts that elevate your designs.
