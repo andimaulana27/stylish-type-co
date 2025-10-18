@@ -8,9 +8,9 @@ const ContentSecurityPolicy = `
   default-src 'self';
   script-src 'self' 'unsafe-eval' 'unsafe-inline' *.paypal.com *.sandbox.paypal.com *.googlesyndication.com *.google.com *.google-analytics.com *.googletagmanager.com *.adtrafficquality.google blob:;
   style-src 'self' 'unsafe-inline' fonts.googleapis.com;
-  img-src 'self' data: blob: huyqjwttususmcwazogx.supabase.co avatar.iran.liara.run lh3.googleusercontent.com *.paypal.com *.sandbox.paypal.com *.paypalobjects.com *.adtrafficquality.google;
+  img-src 'self' data: blob: fxjazgmdfhiojmapttda.supabase.co avatar.iran.liara.run lh3.googleusercontent.com *.paypal.com *.sandbox.paypal.com *.paypalobjects.com *.adtrafficquality.google;
   connect-src 'self' *.supabase.co *.supabase.io wss://*.supabase.co wss://*.supabase.io vitals.vercel-insights.com *.paypal.com *.sandbox.paypal.com *.google-analytics.com *.analytics.google.com *.adtrafficquality.google *.google.com *.googlesyndication.com;
-  font-src 'self' fonts.gstatic.com huyqjwttususmcwazogx.supabase.co blob:;
+  font-src 'self' fonts.gstatic.com fxjazgmdfhiojmapttda.supabase.co blob:;
   frame-src 'self' *.paypal.com *.sandbox.paypal.com *.google.com *.googlesyndication.com *.doubleclick.net *.adtrafficquality.google;
   object-src 'none';
   base-uri 'self';
@@ -78,7 +78,7 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'huyqjwttususmcwazogx.supabase.co',
+        hostname: 'fxjazgmdfhiojmapttda.supabase.co',
         port: '',
         pathname: '/storage/v1/object/public/**',
       },

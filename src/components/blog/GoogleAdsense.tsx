@@ -5,7 +5,6 @@ import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 
 type GoogleAdsenseProps = {
-  client: string;
   slot: string;
   className?: string;
   format?: 'auto' | 'fluid';
@@ -13,7 +12,6 @@ type GoogleAdsenseProps = {
 };
 
 const GoogleAdsense = ({ 
-    client, 
     slot, 
     className = 'adsbygoogle', 
     format = 'auto', 
@@ -27,31 +25,30 @@ const GoogleAdsense = ({
             // @ts-expect-error adsbygoogle is loaded from an external script
             (window.adsbygoogle = window.adsbygoogle || []).push({});
         } catch (err) {
-            // --- PERBAIKAN UTAMA DI SINI ---
-            // Kita cek terlebih dahulu apakah 'err' adalah sebuah instance dari Error
             if (err instanceof Error) {
-                // Jangan tampilkan error di konsol jika hanya karena slot sudah terisi
                 if (err.message.includes("All ins elements in the DOM with class=adsbygoogle already have ads in them.")) {
                     return;
                 }
                 console.error("AdSense error:", err.message);
             } else {
-                // Jika 'err' bukan objek Error, log saja apa adanya
                 console.error("An unknown AdSense error occurred:", err);
             }
-            // --- AKHIR PERBAIKAN ---
         }
     }, [pathname]); 
 
-    if (!client || !slot) {
+    if (!slot) {
         return null;
     }
 
     return (
         <ins
             className={className}
-            style={{ display: 'block' }}
-            data-ad-client={client}
+            // --- PERBAIKAN UTAMA DI SINI ---
+            // 1. display: 'block' diperlukan agar margin auto berfungsi
+            // 2. margin: '0 auto' akan memusatkan slot iklan secara horizontal
+            // 3. textAlign: 'center' untuk memastikan konten di dalamnya juga center
+            style={{ display: 'block', margin: '0 auto', textAlign: 'center' }}
+            // --- AKHIR PERBAIKAN ---
             data-ad-slot={slot}
             data-ad-format={format}
             data-full-width-responsive={responsive}

@@ -192,27 +192,27 @@ const testimonials = [
 
 const features = [
   {
-    iconSrc: '/svg/why-us/Instant Download.svg',
+    iconSrc: '/svg/why-us/2.svg',
     title: 'Instant Download',
     description: 'After you make a purchase, you will get an instant download.'
   },
   {
-    iconSrc: '/svg/why-us/Order Protection.svg',
+    iconSrc: '/svg/why-us/5.svg',
     title: 'Order Protection',
     description: 'We maintain the highest level of online payment security.'
   },
   {
-    iconSrc: '/svg/why-us/Full Support.svg',
+    iconSrc: '/svg/why-us/1.svg',
     title: 'Full Support',
     description: 'Our Customer Support Team is ready and available to help.'
   },
   {
-    iconSrc: '/svg/why-us/License Options.svg',
+    iconSrc: '/svg/why-us/3.svg',
     title: 'License Options',
     description: 'Our font offers a wide selection of licenses that can fit your needs.'
   },
   {
-    iconSrc: '/svg/why-us/Subscription.svg',
+    iconSrc: '/svg/why-us/4.svg',
     title: 'Subscription',
     description: 'Unlock this font and our entire library with a subscription.'
   }
