@@ -238,8 +238,8 @@ export async function sendNewsletterAction(
 
     // --- PERUBAHAN 2: Gunakan template email baru ---
     const { error } = await resend.emails.send({
-      from: 'Timeless Type Newsletter <marketing@timelesstype.co>', // Ganti dengan email Anda
-      to: 'noreply@timelesstype.co', // Alamat 'to' utama (tidak terlihat oleh penerima)
+      from: 'stylish Type Newsletter <marketing@stylishtype.co>', // Ganti dengan email Anda
+      to: 'noreply@stylishtype.co', // Alamat 'to' utama (tidak terlihat oleh penerima)
       bcc: targetEmails, // Kirim ke semua target via BCC
       subject: subject,
       react: NewsletterEmail({ htmlContent }), // <-- Menggunakan komponen React baru

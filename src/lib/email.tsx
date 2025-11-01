@@ -91,9 +91,9 @@ export const sendOrderConfirmationEmail = async (
     });
 
     const sendToUser = resend.emails.send({
-      from: 'Timeless Type <support@timelesstype.co>',
+      from: 'Stylish Type <support@stylishtype.co>',
       to: [user.email!],
-      subject: `Your Timeless Type Order #${order.id.substring(0, 8).toUpperCase()}`,
+      subject: `Your stylish Type Order #${order.id.substring(0, 8).toUpperCase()}`,
       react: OrderConfirmationEmail({
         userName: user.full_name || 'Designer',
         orderId: order.id,
@@ -105,8 +105,8 @@ export const sendOrderConfirmationEmail = async (
     });
 
     const sendToAdmin = resend.emails.send({
-        from: 'Timeless Type Notification <support@timelesstype.co>',
-        to: ['timelesstypestudio@gmail.com'],
+        from: 'Stylish Type Notification <support@stylishtype.co>',
+        to: ['stylishtypestudio@gmail.com'],
         subject: `[New Order] - #${order.id.substring(0, 8).toUpperCase()} from ${user.full_name}`,
         react: AdminOrderNotificationEmail({
             customerName: user.full_name || 'N/A',
@@ -177,7 +177,7 @@ export const sendSubscriptionConfirmationEmail = async (
     });
 
     const sendToUser = resend.emails.send({
-      from: 'Timeless Type <support@timelesstype.co>',
+      from: 'Stylish Type <support@stylishtype.co>',
       to: [user.email!],
       subject: `Welcome to Your ${plan.name} Subscription!`,
       react: SubscriptionConfirmationEmail({
@@ -190,8 +190,8 @@ export const sendSubscriptionConfirmationEmail = async (
     });
 
     const sendToAdmin = resend.emails.send({
-      from: 'Timeless Type Notification <support@timelesstype.co>',
-      to: ['timelesstypestudio@gmail.com'],
+      from: 'Stylish Type Notification <support@stylishtype.co>',
+      to: ['stylishtypestudio@gmail.com'],
       subject: `[New Subscription] - ${plan.name} by ${user.full_name}`,
       react: AdminOrderNotificationEmail({
           customerName: user.full_name || 'N/A',
