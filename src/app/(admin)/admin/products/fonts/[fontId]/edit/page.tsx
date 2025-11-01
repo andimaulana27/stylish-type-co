@@ -13,10 +13,19 @@ import { Listbox, Transition } from '@headlessui/react';
 import { useRouter } from 'next/navigation';
 import GalleryImageUploader from '@/components/admin/GalleryImageUploader';
 import { createBrowserClient } from '@supabase/ssr';
+// --- PERUBAHAN DI SINI ---
+import FontZipUploader from '@/components/admin/FontZipUploader';
+import JSZip from 'jszip';
+import opentype from 'opentype.js';
+// --- AKHIR PERUBAHAN ---
 
 type Font = Tables<'fonts'>;
 type Partner = { id: string; name: string };
 const categories = ["Serif Display", "Sans Serif", "Slab Serif", "Groovy", "Script", "Blackletter", "Western", "Sport", "Sci-Fi"];
+
+// --- PERUBAHAN DI SINI ---
+type PreviewFont = { name: string; styleName: string; fontFamily: string; url: string; };
+// --- AKHIR PERUBAHAN ---
 
 const EditFontForm = ({ font }: { font: Font }) => {
   const router = useRouter();
@@ -34,6 +43,16 @@ const EditFontForm = ({ font }: { font: Font }) => {
   const [isGalleryUploading, setIsGalleryUploading] = useState(false);
   const [partners, setPartners] = useState<Partner[]>([]);
   const [selectedPartner, setSelectedPartner] = useState<Partner | null>(null);
+
+  // --- STATE BARU UNTUK ZIP UPLOAD & PREVIEW ---
+  const [isZipUploading, setIsZipUploading] = useState(false);
+  const [uploadResult, setUploadResult] = useState<{ downloadableFileUrl: string } | null>(null);
+  const [newGlyphsJson, setNewGlyphsJson] = useState<string[]>([]);
+  
+  const [newPreviewFonts, setNewPreviewFonts] = useState<PreviewFont[]>([]);
+  const [newDynamicStyles, setNewDynamicStyles] = useState<string>('');
+  const [livePreviewText, setLivePreviewText] = useState('The quick brown fox jumps over the lazy dog');
+  // --- AKHIR STATE BARU ---
 
   useEffect(() => {
     const fetchPartners = async () => {
@@ -53,6 +72,13 @@ const EditFontForm = ({ font }: { font: Font }) => {
     const generatedSlug = fontName.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9-]+/g, ' ').trim().replace(/\s+/g, '-').replace(/-+/g, '-');
     setSlug(generatedSlug);
   }, [fontName]);
+  
+  // --- EFEK BARU UNTUK CLEANUP OBJECT URL ---
+  useEffect(() => {
+      const urlsToClean = newPreviewFonts.map(font => font.url);
+      return () => { urlsToClean.forEach(url => URL.revokeObjectURL(url)); };
+  }, [newPreviewFonts]);
+  // --- AKHIR EFEK BARU ---
 
   const addTags = (tagString: string) => {
     const newTags = tagString.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0 && !tags.includes(tag));
@@ -81,9 +107,108 @@ const EditFontForm = ({ font }: { font: Font }) => {
       setIsGalleryUploading(isUploading);
   }, []);
 
+  // --- FUNGSI BARU DARI new/page.tsx ---
+  const getFontStyle = (fileName: string): string => {
+      const nameWithoutExt = fileName.replace(/\.[^/.]+$/, "");
+      const nameParts = nameWithoutExt.split(/[-_ ]+/);
+      const styleKeywords: { [key: string]: string } = {
+        'thin': 'Thin', 'extralight': 'ExtraLight', 'light': 'Light', 'regular': 'Regular',
+        'medium': 'Medium', 'semibold': 'SemiBold', 'bold': 'Bold', 'extrabold': 'ExtraBold',
+        'black': 'Black', 'italic': 'Italic', 'bolditalic': 'Bold Italic'
+      };
+      for (let i = nameParts.length - 1; i >= 0; i--) {
+          const part = nameParts[i].toLowerCase();
+          if (styleKeywords[part]) return styleKeywords[part];
+      }
+      return 'Regular';
+  };
+    
+  const handleAndScanZipFile = async (file: File | null) => {
+      setNewPreviewFonts([]);
+      setNewDynamicStyles('');
+      setNewGlyphsJson([]);
+
+      if (!file) return;
+
+      toast.loading('Scanning new ZIP for .OTF previews & glyphs...');
+      const zip = new JSZip();
+      try {
+          const contents = await zip.loadAsync(file);
+          const fontPromises: Promise<PreviewFont>[] = [];
+          let primaryFontScanned = false;
+          
+          contents.forEach((relativePath, zipEntry) => {
+              if (!zipEntry.dir && /\.(otf)$/i.test(zipEntry.name)) {
+                  const promise = zipEntry.async('arraybuffer').then(arrayBuffer => {
+                      const blob = new Blob([arrayBuffer]);
+                      const url = URL.createObjectURL(blob);
+                      const fileName = zipEntry.name.split('/').pop() || zipEntry.name;
+                      const styleName = getFontStyle(fileName);
+                      const fontFamily = `Preview-${Date.now()}-${Math.random()}`;
+
+                      if (!primaryFontScanned) {
+                          try {
+                              const font = opentype.parse(arrayBuffer);
+                              const glyphSet = new Set<string>();
+                              for (let i = 0; i < font.numGlyphs; i++) {
+                                  const glyph = font.glyphs.get(i);
+                                  if (glyph.unicode) {
+                                    const char = String.fromCodePoint(glyph.unicode);
+                                    if (char.trim().length > 0 || char === ' ') glyphSet.add(char);
+                                  }
+                              }
+                              setNewGlyphsJson(Array.from(glyphSet));
+                              primaryFontScanned = true;
+                          } catch (e) {
+                              console.warn(`Could not parse font ${fileName} for glyphs.`, e);
+                          }
+                      }
+                      
+                      return { name: fileName, styleName, fontFamily, url };
+                  });
+                  fontPromises.push(promise);
+              }
+          });
+          
+          const loadedFonts = await Promise.all(fontPromises);
+
+          if (loadedFonts.length === 0) {
+              toast.dismiss();
+              toast.error("No .OTF files found in the new ZIP for preview.");
+              return;
+          }
+
+          const newStyles = loadedFonts.map(font => `@font-face { font-family: '${font.fontFamily}'; src: url('${font.url}'); }`).join('\n');
+          
+          setNewPreviewFonts(loadedFonts);
+          setNewDynamicStyles(newStyles);
+          toast.dismiss();
+          toast.success(`${loadedFonts.length} OTF style(s) detected for preview!`);
+      } catch (error) {
+          toast.dismiss();
+          toast.error("Failed to read new ZIP file.");
+      }
+  };
+  
+  const handleZipUploadComplete = useCallback((result: { downloadableFileUrl: string } | null, isUploading: boolean) => {
+      setUploadResult(result);
+      setIsZipUploading(isUploading);
+      if (!isUploading && !result) {
+          // Upload dibatalkan, bersihkan preview
+          setNewPreviewFonts([]);
+          setNewDynamicStyles('');
+          setNewGlyphsJson([]);
+      }
+  }, []);
+  // --- AKHIR FUNGSI BARU ---
+
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (isGalleryUploading) { toast.error("Please wait for images to finish uploading."); return; }
+    if (isGalleryUploading || isZipUploading) { 
+        toast.error("Please wait for all file uploads to finish."); 
+        return; 
+    }
+    
     const formData = new FormData(event.currentTarget);
     formData.set('category', selectedCategory || '');
     formData.set('partner_id', selectedPartner?.id || '');
@@ -93,7 +218,19 @@ const EditFontForm = ({ font }: { font: Font }) => {
     formData.set('name', fontName);
     formData.set('slug', slug);
     galleryImageUrls.forEach(url => formData.append('preview_image_urls', url));
-    formData.delete('short_description');
+    
+    // --- PERUBAHAN DI SINI: Tambahkan data ZIP baru dan lama ---
+    if (uploadResult) {
+        // Kirim data baru
+        formData.append('downloadable_file_url', uploadResult.downloadableFileUrl);
+        formData.append('glyphs_json', JSON.stringify(newGlyphsJson));
+        
+        // Kirim data lama untuk dihapus oleh action
+        formData.append('existing_download_zip_path', font.download_zip_path || '');
+        formData.append('existing_font_files_json', JSON.stringify(font.font_files || []));
+    }
+    // --- AKHIR PERUBAHAN ---
+
     startTransition(async () => {
       const result = await updateFontAction(font.id, formData);
       if (result?.error) { toast.error(result.error); } 
@@ -103,7 +240,8 @@ const EditFontForm = ({ font }: { font: Font }) => {
       }
     });
   };
-
+  
+  const isUploading = isGalleryUploading || isZipUploading; // Variabel helper
   const inputStyles = "w-full bg-white/5 border border-transparent rounded-full px-4 py-3 text-brand-light placeholder:text-brand-light-muted transition-colors duration-300 focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent hover:border-brand-accent/50";
   const labelStyles = "block text-sm font-medium text-brand-light-muted mb-2 group-hover:text-brand-accent transition-colors";
 
@@ -118,6 +256,7 @@ const EditFontForm = ({ font }: { font: Font }) => {
             -webkit-text-fill-color: #FFFFFF !important;
             caret-color: #FFFFFF !important;
           }
+          ${newDynamicStyles}
       `}</style>
       <form onSubmit={handleSubmit} className="bg-brand-darkest p-8 rounded-lg border border-white/10 space-y-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -133,11 +272,11 @@ const EditFontForm = ({ font }: { font: Font }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
           <div className="space-y-2 group">
             <label htmlFor="category" className={labelStyles}>Category</label>
-            <Listbox value={selectedCategory} onChange={setSelectedCategory}>{({ open }) => (<div className="relative"><Listbox.Button className={`${inputStyles} text-left flex justify-between items-center`}><span className={selectedCategory ? 'text-brand-light' : 'text-brand-light-muted'}>{selectedCategory || 'Select a category'}</span><ChevronDown size={20} className={`transition-transform duration-200 ${open ? 'rotate-180 text-brand-accent' : 'text-brand-light-muted'}`} /></Listbox.Button><Transition as={Fragment} leave="transition ease-in duration-100" leaveFrom="opacity-100" leaveTo="opacity-0"><Listbox.Options className="absolute z-10 mt-1 w-full bg-[#1e1e1e] shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black/5 overflow-auto focus:outline-none sm:text-sm">{categories.map((category) => (<Listbox.Option key={category} className={({ active }) => `cursor-pointer select-none relative py-2 pl-10 pr-4 ${active ? 'bg-brand-accent text-brand-darkest' : 'text-brand-light'}`} value={category}>{({ selected }) => (<><span className={`block truncate ${selected ? 'font-medium' : 'font-normal'}`}>{category}</span>{selected ? (<span className="absolute inset-y-0 left-0 flex items-center pl-3 text-brand-accent"><Check size={20} aria-hidden="true" /></span>) : null}</>)}</Listbox.Option>))}</Listbox.Options></Transition></div>)}</Listbox>
+            <Listbox value={selectedCategory} onChange={setSelectedCategory}>{({ open }) => (<div className="relative"><Listbox.Button className={`${inputStyles} text-left flex justify-between items-center`}><span className={selectedCategory ? 'text-brand-light' : 'text-brand-light-muted'}>{selectedCategory || 'Select a category'}</span><ChevronDown size={20} className={`transition-transform duration-200 ${open ? 'rotate-180 text-brand-accent' : 'text-brand-light-muted'}`} /></Listbox.Button><Transition as={Fragment} leave="transition ease-in duration-100" leaveFrom="opacity-100" leaveTo="opacity-0"><Listbox.Options className="absolute z-10 mt-1 w-full bg-[#1e1e1e] shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">{categories.map((category) => (<Listbox.Option key={category} className={({ active }) => `cursor-pointer select-none relative py-2 pl-10 pr-4 ${active ? 'bg-brand-accent text-brand-darkest' : 'text-brand-light'}`} value={category}>{({ selected }) => (<><span className={`block truncate ${selected ? 'font-medium' : 'font-normal'}`}>{category}</span>{selected ? (<span className="absolute inset-y-0 left-0 flex items-center pl-3 text-brand-accent"><Check size={20} aria-hidden="true" /></span>) : null}</>)}</Listbox.Option>))}</Listbox.Options></Transition></div>)}</Listbox>
           </div>
           <div className="space-y-2 group">
             <label htmlFor="partner" className={labelStyles}>Partner/Foundry</label>
-            <Listbox value={selectedPartner} onChange={setSelectedPartner}>{({ open }) => (<div className="relative"><Listbox.Button className={`${inputStyles} text-left flex justify-between items-center`}><span className={selectedPartner ? 'text-brand-light' : 'text-brand-light-muted'}>{selectedPartner?.name || 'Stylish Type (Default)'}</span><ChevronDown size={20} className={`transition-transform duration-200 ${open ? 'rotate-180 text-brand-accent' : 'text-brand-light-muted'}`} /></Listbox.Button><Transition as={Fragment} leave="transition ease-in duration-100" leaveFrom="opacity-100" leaveTo="opacity-0"><Listbox.Options className="absolute z-10 mt-1 w-full bg-[#1e1e1e] shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black/5 overflow-auto focus:outline-none sm:text-sm"><Listbox.Option className={({ active }) => `cursor-pointer select-none relative py-2 pl-10 pr-4 ${active ? 'bg-brand-accent text-brand-darkest' : 'text-brand-light'}`} value={null}>{({ selected }) => ( <> <span className={`block truncate ${selected ? 'font-medium' : 'font-normal'}`}>Stylish Type (Default)</span> {selected ? (<span className="absolute inset-y-0 left-0 flex items-center pl-3 text-brand-accent"><Check size={20} aria-hidden="true" /></span>) : null} </>)}</Listbox.Option>{partners.map((partner) => ( <Listbox.Option key={partner.id} className={({ active }) => `cursor-pointer select-none relative py-2 pl-10 pr-4 ${active ? 'bg-brand-accent text-brand-darkest' : 'text-brand-light'}`} value={partner}>{({ selected }) => ( <> <span className={`block truncate ${selected ? 'font-medium' : 'font-normal'}`}>{partner.name}</span> {selected ? (<span className="absolute inset-y-0 left-0 flex items-center pl-3 text-brand-accent"><Check size={20} aria-hidden="true" /></span>) : null} </>)}</Listbox.Option>))}</Listbox.Options></Transition></div>)}</Listbox>
+            <Listbox value={selectedPartner} onChange={setSelectedPartner}>{({ open }) => (<div className="relative"><Listbox.Button className={`${inputStyles} text-left flex justify-between items-center`}><span className={selectedPartner ? 'text-brand-light' : 'text-brand-light-muted'}>{selectedPartner?.name || 'Timeless Type (Default)'}</span><ChevronDown size={20} className={`transition-transform duration-200 ${open ? 'rotate-180 text-brand-accent' : 'text-brand-light-muted'}`} /></Listbox.Button><Transition as={Fragment} leave="transition ease-in duration-100" leaveFrom="opacity-100" leaveTo="opacity-0"><Listbox.Options className="absolute z-10 mt-1 w-full bg-[#1e1e1e] shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black/5 overflow-auto focus:outline-none sm:text-sm"><Listbox.Option className={({ active }) => `cursor-pointer select-none relative py-2 pl-10 pr-4 ${active ? 'bg-brand-accent text-brand-darkest' : 'text-brand-light'}`} value={null}>{({ selected }) => ( <> <span className={`block truncate ${selected ? 'font-medium' : 'font-normal'}`}>Timeless Type (Default)</span> {selected ? (<span className="absolute inset-y-0 left-0 flex items-center pl-3 text-brand-accent"><Check size={20} aria-hidden="true" /></span>) : null} </>)}</Listbox.Option>{partners.map((partner) => ( <Listbox.Option key={partner.id} className={({ active }) => `cursor-pointer select-none relative py-2 pl-10 pr-4 ${active ? 'bg-brand-accent text-brand-darkest' : 'text-brand-light'}`} value={partner}>{({ selected }) => ( <> <span className={`block truncate ${selected ? 'font-medium' : 'font-normal'}`}>{partner.name}</span> {selected ? (<span className="absolute inset-y-0 left-0 flex items-center pl-3 text-brand-accent"><Check size={20} aria-hidden="true" /></span>) : null} </>)}</Listbox.Option>))}</Listbox.Options></Transition></div>)}</Listbox>
           </div>
         </div>
         <div className="space-y-2 group">
@@ -158,12 +297,41 @@ const EditFontForm = ({ font }: { font: Font }) => {
           <label htmlFor="main_description" className={labelStyles}>Main Description</label>
           <RichTextEditor value={mainDescription} onChange={setMainDescription} placeholder="A full description for the font detail page..."/>
         </div>
+        
+        {/* --- PERUBAHAN DI SINI: Mengganti Peringatan dengan Uploader --- */}
         <div className="space-y-6 border-t border-white/10 pt-6">
+          <FontZipUploader 
+            label="Replace Font Assets (.zip)"
+            onUploadComplete={handleZipUploadComplete}
+            onFileSelect={handleAndScanZipFile}
+          />
           <GalleryImageUploader initialUrls={font.preview_image_urls || []} onUploadChange={handleGalleryUploadChange} />
         </div>
-        <div className="border-t border-white/10 pt-4"><p className="text-sm text-brand-light-muted"><strong>Note:</strong> Font file assets (.zip) cannot be changed from this page. To update the font files, please delete and re-upload the entire product.</p></div>
+        
+        {/* --- FUNGSI BARU: Pratinjau font yang baru di-scan --- */}
+        {newPreviewFonts.length > 0 && (
+            <div className="space-y-4 group border-t border-white/10 pt-6">
+              <label className={labelStyles}>New Font Preview (Unsaved)</label>
+                <input type="text" value={livePreviewText} onChange={(e) => setLivePreviewText(e.target.value)} className={inputStyles} placeholder="Type here to preview..."/>
+              <div className="bg-white/5 rounded-lg p-6 space-y-6 max-h-96 overflow-y-auto">
+                  {newPreviewFonts.map((font) => (
+                      <div key={font.fontFamily}>
+                          <p className="text-sm text-brand-light-muted mb-2">{font.name}</p>
+                          <p className="text-3xl text-brand-light break-all" style={{ fontFamily: `'${font.fontFamily}'` }}>
+                              {livePreviewText || "The quick brown fox jumps over the lazy dog"}
+                          </p>
+                      </div>
+                  ))}
+              </div>
+          </div>
+        )}
+        {/* --- AKHIR FUNGSI BARU --- */}
+
         <div className="border-t border-white/10 pt-6 flex justify-end">
-          <button type="submit" disabled={isPending || isGalleryUploading} className="px-6 py-2 bg-brand-accent text-brand-darkest font-semibold rounded-lg transition-all duration-300 ease-in-out hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">{(isPending || isGalleryUploading) && <Loader2 className="animate-spin" size={18} />}{isPending ? 'Updating...' : isGalleryUploading ? 'Uploading...' : 'Update Font'}</button>
+          <button type="submit" disabled={isPending || isUploading} className="px-6 py-2 bg-brand-accent text-brand-darkest font-semibold rounded-lg transition-all duration-300 ease-in-out hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+            {(isPending || isUploading) && <Loader2 className="animate-spin" size={18} />}
+            {isPending ? 'Updating...' : isUploading ? 'Uploading...' : 'Update Font'}
+          </button>
         </div>
       </form>
     </>

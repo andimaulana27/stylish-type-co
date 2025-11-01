@@ -12,13 +12,14 @@ import JSZip from 'jszip';
 import GalleryImageUploader from '@/components/admin/GalleryImageUploader';
 import RichTextEditor from '@/components/admin/RichTextEditor';
 import { createBrowserClient } from '@supabase/ssr';
+// --- PERUBAHAN DI SINI: Impor BundleZipUploader ---
+import BundleZipUploader from '@/components/admin/BundleZipUploader';
 
 type BundleWithFonts = Tables<'bundles'> & {
   bundle_fonts: { font_id: string }[];
 };
-type FoundFont = { id: string; name: string; found: true; fileName: string; }
-type NotFoundFont = { found: false; fileName: string; }
-type DetectedFont = FoundFont | NotFoundFont;
+// --- PERUBAHAN DI SINI: Menambahkan tipe data dari BundleZipUploader ---
+type BundleFontPreview = { name: string; style: string; url: string; };
 
 const EditBundleForm = ({ bundle }: { bundle: BundleWithFonts }) => {
   const router = useRouter();
@@ -26,7 +27,6 @@ const EditBundleForm = ({ bundle }: { bundle: BundleWithFonts }) => {
   const [bundleName, setBundleName] = useState(bundle.name);
   const [slug, setSlug] = useState(bundle.slug);
   const [mainDescription, setMainDescription] = useState(bundle.main_description || '');
-  const [detectedFonts, setDetectedFonts] = useState<DetectedFont[]>([]);
   
   const [tags, setTags] = useState<string[]>(bundle.tags || []);
   const [currentTag, setCurrentTag] = useState('');
@@ -37,6 +37,14 @@ const EditBundleForm = ({ bundle }: { bundle: BundleWithFonts }) => {
 
   const [galleryImageUrls, setGalleryImageUrls] = useState<string[]>(bundle.preview_image_urls || []);
   const [isGalleryUploading, setIsGalleryUploading] = useState(false);
+
+  // --- PERUBAHAN DI SINI: State untuk uploader ZIP baru ---
+  const [isZipUploading, setIsZipUploading] = useState(false);
+  const [uploadResult, setUploadResult] = useState<{
+      downloadableFileUrl: string;
+      bundleFontPreviews: BundleFontPreview[];
+  } | null>(null);
+  // --- AKHIR PERUBAHAN ---
 
   useEffect(() => {
     const generatedSlug = bundleName.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9-]+/g, ' ').trim().replace(/\s+/g, '-').replace(/-+/g, '-');
@@ -57,26 +65,30 @@ const EditBundleForm = ({ bundle }: { bundle: BundleWithFonts }) => {
       setCurrentPurposeTag('');
   };
   const handlePurposeTagKeyDown = (e: KeyboardEvent<HTMLInputElement>) => { if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addPurposeTags(currentPurposeTag); } };
-  const removePurposeTag = (tagToRemove: string) => setPurposeTags(purposeTags.filter(tag => tag !== tagToRemove));
+  const removePurposeTag = (tagToRemove: string) => setPurposeTags(tags.filter(tag => tag !== tagToRemove));
 
-  const handleZipChange = async (e: ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
-      toast.loading('Scanning new ZIP file...');
-      const zip = new JSZip();
-      const contents = await zip.loadAsync(file);
-      const fontFileNames = Object.keys(contents.files).filter(name => /\.(otf|ttf|woff|woff2)$/i.test(name));
-      const foundFontsInDB = await findFontsByNamesAction(fontFileNames);
-      const detectionResult: DetectedFont[] = fontFileNames.map(fileName => {
-          const baseName = fileName.replace(/\.[^/.]+$/, "").replace(/[-_ ](thin|extralight|light|regular|medium|semibold|bold|extrabold|black|italic|bolditalic)/i, '').trim();
-          const match = foundFontsInDB.find(dbFont => dbFont.name === baseName);
-          return match ? { ...match, found: true, fileName } : { found: false, fileName };
-      });
-      setDetectedFonts(detectionResult);
-      setFontIds(detectionResult.filter((f): f is FoundFont => f.found).map(f => f.id));
-      toast.dismiss();
-      toast.success('New font list detected. Save to apply changes.');
-  };
+  // --- PERUBAHAN DI SINI: Handler untuk BundleZipUploader ---
+  const handleZipUploadComplete = useCallback(async (
+    result: { downloadableFileUrl: string; bundleFontPreviews: BundleFontPreview[]; } | null, 
+    isUploading: boolean
+  ) => {
+    setUploadResult(result);
+    setIsZipUploading(isUploading);
+    if (result && !isUploading) {
+        // Jika upload selesai, cari font ID baru
+        toast.loading('Matching uploaded fonts to database...');
+        const fontFileNames = result.bundleFontPreviews.map(f => f.name);
+        const foundFontsInDB = await findFontsByNamesAction(fontFileNames);
+        const newFontIds = foundFontsInDB.map(f => f.id);
+        setFontIds(newFontIds); // Update state fontIds
+        toast.dismiss();
+        toast.success(`Found ${newFontIds.length} matching fonts in DB.`);
+    } else if (!result && !isUploading) {
+        // Jika upload dibatalkan, kembalikan ke font ID asli
+        setFontIds(bundle.bundle_fonts.map(f => f.font_id));
+    }
+  }, [bundle.bundle_fonts]);
+  // --- AKHIR PERUBAHAN ---
   
   const handleGalleryUploadChange = useCallback((urls: string[], isUploading: boolean) => {
     setGalleryImageUrls(urls);
@@ -85,7 +97,11 @@ const EditBundleForm = ({ bundle }: { bundle: BundleWithFonts }) => {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (isGalleryUploading) { toast.error("Please wait for images to finish uploading."); return; }
+    if (isGalleryUploading || isZipUploading) { 
+      toast.error("Please wait for all file uploads to finish."); 
+      return; 
+    }
+
     startTransition(async () => {
         const formData = new FormData(event.currentTarget);
         formData.set('main_description', mainDescription);
@@ -93,6 +109,18 @@ const EditBundleForm = ({ bundle }: { bundle: BundleWithFonts }) => {
         formData.set('purpose_tags', purposeTags.join(','));
         galleryImageUrls.forEach(url => formData.append('preview_image_urls', url));
         fontIds.forEach(id => formData.append('font_ids', id));
+
+        // --- PERUBAHAN DI SINI: Tambahkan data ZIP baru dan lama ke FormData ---
+        if (uploadResult) {
+            formData.append('downloadable_file_url', uploadResult.downloadableFileUrl);
+            formData.append('bundle_font_previews_json', JSON.stringify(uploadResult.bundleFontPreviews));
+            
+            // Kirim path lama untuk dihapus oleh server action
+            formData.append('existing_download_zip_path', bundle.download_zip_path || '');
+            formData.append('existing_bundle_font_previews_json', JSON.stringify(bundle.bundle_font_previews || []));
+        }
+        // --- AKHIR PERUBAHAN ---
+
         const result = await updateBundleAction(bundle.id, formData);
         if (result?.error) { toast.error(result.error); } 
         else { 
@@ -104,6 +132,9 @@ const EditBundleForm = ({ bundle }: { bundle: BundleWithFonts }) => {
 
   const inputStyles = "w-full bg-white/5 border border-transparent rounded-full px-4 py-3 text-brand-light placeholder:text-brand-light-muted transition-colors duration-300 focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent hover:border-brand-accent/50";
   const labelStyles = "block text-sm font-medium text-brand-light-muted mb-2 group-hover:text-brand-accent transition-colors";
+  
+  // Tentukan apakah ada file ZIP yang sedang diunggah
+  const isUploadingFiles = isGalleryUploading || isZipUploading;
 
   return (
     <>
@@ -151,31 +182,23 @@ const EditBundleForm = ({ bundle }: { bundle: BundleWithFonts }) => {
           <RichTextEditor value={mainDescription} onChange={setMainDescription} />
         </div>
         <div className="space-y-6 border-t border-white/10 pt-6">
-          <div className="space-y-2 group">
-            <label htmlFor="zipFile" className={labelStyles}>Replace Font Files (.zip)</label>
-            <p className="text-xs text-brand-light-muted -mt-2 mb-2">Optional: Upload a new ZIP to replace the list of fonts in this bundle.</p>
-            <input type="file" id="zipFile" name="zipFile" accept=".zip" onChange={handleZipChange} className="block w-full text-sm text-brand-light-muted file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-brand-dark-secondary file:text-brand-light hover:file:bg-brand-accent/20"/>
-          </div>
+          
+          {/* --- PERUBAHAN DI SINI: Ganti input file dengan BundleZipUploader --- */}
+          <BundleZipUploader
+            label="Replace Bundle Assets (.zip)"
+            onUploadComplete={handleZipUploadComplete}
+            onFileSelect={() => {}} // onFileSelect tidak diperlukan di sini karena uploader menangani scan
+          />
+          {/* --- AKHIR PERUBAHAN --- */}
+
           <GalleryImageUploader initialUrls={bundle.preview_image_urls || []} onUploadChange={handleGalleryUploadChange} />
         </div>
-        {detectedFonts.length > 0 && (
-           <div className="space-y-2 group">
-              <label className={labelStyles}>New Detected Fonts (Will Replace Current on Save)</label>
-              <div className="bg-white/5 rounded-lg p-4 space-y-2 max-h-60 overflow-y-auto">
-                  {detectedFonts.map((font, index) => (
-                      <div key={index} className={`flex items-center gap-3 text-sm p-1 rounded ${font.found ? 'text-green-300' : 'text-red-400'}`}>
-                          {font.found ? <PackageCheck size={16} /> : <PackageX size={16} />}
-                          <span className="font-mono text-xs flex-1">{font.fileName}</span>
-                          {font.found ? <span className="font-semibold">{font.name} (Found)</span> : <span className="font-semibold">(Not in DB)</span>}
-                      </div>
-                  ))}
-              </div>
-          </div>
-        )}
+        
+        {/* --- PERUBAHAN DI SINI: Ganti nama variabel --- */}
         <div className="border-t border-white/10 pt-6 flex justify-end">
-          <button type="submit" disabled={isPending || isGalleryUploading} className="px-8 py-3 bg-brand-accent text-brand-darkest font-semibold rounded-lg flex items-center gap-2 transition-all duration-300 ease-in-out hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed">
-              {(isPending || isGalleryUploading) && <Loader2 className="animate-spin" size={20} />}
-              {isPending ? 'Saving...' : isGalleryUploading ? 'Uploading...' : 'Save Changes'}
+          <button type="submit" disabled={isPending || isUploadingFiles} className="px-8 py-3 bg-brand-accent text-brand-darkest font-semibold rounded-lg flex items-center gap-2 transition-all duration-300 ease-in-out hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed">
+              {(isPending || isUploadingFiles) && <Loader2 className="animate-spin" size={20} />}
+              {isPending ? 'Saving...' : isUploadingFiles ? 'Uploading...' : 'Save Changes'}
           </button>
         </div>
       </form>

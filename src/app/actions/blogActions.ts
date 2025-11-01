@@ -4,7 +4,7 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
-import { Database, TablesInsert, TablesUpdate } from '@/lib/database.types';
+import { Database, TablesInsert, TablesUpdate, Tables } from '@/lib/database.types'; // <-- Pastikan Tables diimpor
 
 type PostForDeletion = Pick<Database['public']['Tables']['posts']['Row'], 'id' | 'image_url'>;
 
@@ -46,8 +46,36 @@ type ActionResult = {
     error?: string;
 };
 
-// --- FUNGSI BARU UNTUK HAPUS MASSAL ---
+// --- FUNGSI BARU: Mengambil detail blog berdasarkan array slug ---
+export async function getBlogDetailsBySlugsAction(slugs: string[]): Promise<{ data: Pick<Tables<'posts'>, 'title' | 'slug' | 'image_url'>[], error?: string }> {
+    if (!slugs || slugs.length === 0) {
+        return { data: [] };
+    }
+    const supabase = createSupabaseActionClient();
+    try {
+        const { data, error } = await supabase
+            .from('posts')
+            .select('title, slug, image_url')
+            .in('slug', slugs)
+            .eq('is_published', true); // Hanya ambil yang sudah publish
+
+        if (error) throw error;
+
+        // Pastikan urutan data sesuai dengan urutan slug input jika memungkinkan
+        const sortedData = slugs.map(slug => data?.find(post => post.slug === slug)).filter(Boolean) as Pick<Tables<'posts'>, 'title' | 'slug' | 'image_url'>[];
+
+        return { data: sortedData };
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'An unknown error occurred.';
+        console.error("Error fetching blog details by slugs:", message);
+        return { data: [], error: message };
+    }
+}
+// --- AKHIR FUNGSI BARU ---
+
+
 export async function bulkDeletePostsAction(postsToDelete: PostForDeletion[]) {
+    // ... (kode fungsi ini tetap sama)
     if (!postsToDelete || postsToDelete.length === 0) {
         return { error: 'No posts selected for deletion.' };
     }
@@ -77,10 +105,10 @@ export async function bulkDeletePostsAction(postsToDelete: PostForDeletion[]) {
         return { error: message };
     }
 }
-// --- AKHIR FUNGSI BARU ---
 
 
 export async function getPostsForMegaMenuAction() {
+    // ... (kode fungsi ini tetap sama)
     const supabase = createSupabaseActionClient();
     try {
         const [newPostsRes, popularPostsRes] = await Promise.all([
@@ -90,16 +118,14 @@ export async function getPostsForMegaMenuAction() {
                 .eq('is_published', true)
                 .order('created_at', { ascending: false })
                 .limit(2),
-            // --- PERUBAHAN DI SINI: Mengurutkan berdasarkan view_count ---
             supabase
                 .from('posts')
                 .select('*')
                 .eq('is_published', true)
                 .order('view_count', { ascending: false })
                 .limit(2)
-            // --- AKHIR PERUBAHAN ---
         ]);
-        
+
         if (newPostsRes.error) throw newPostsRes.error;
         if (popularPostsRes.error) throw popularPostsRes.error;
 
@@ -111,6 +137,7 @@ export async function getPostsForMegaMenuAction() {
 }
 
 export async function getRelatedPostsAction(currentPostId: string, category: string) {
+    // ... (kode fungsi ini tetap sama)
     const supabase = createSupabaseActionClient();
     try {
         const { data, error } = await supabase
@@ -131,6 +158,7 @@ export async function getRelatedPostsAction(currentPostId: string, category: str
 }
 
 export async function getLatestPostsAction() {
+    // ... (kode fungsi ini tetap sama)
     const supabase = createSupabaseActionClient();
     try {
         const { data, error } = await supabase
@@ -149,6 +177,7 @@ export async function getLatestPostsAction() {
 }
 
 export async function createPostAction(formData: FormData): Promise<ActionResult> {
+    // ... (kode fungsi ini tetap sama)
     const supabase = createSupabaseActionClient();
 
     try {
@@ -179,6 +208,7 @@ export async function createPostAction(formData: FormData): Promise<ActionResult
 }
 
 export async function updatePostAction(postId: string, formData: FormData): Promise<ActionResult> {
+    // ... (kode fungsi ini tetap sama)
     const supabase = createSupabaseActionClient();
 
     try {
@@ -210,11 +240,12 @@ export async function updatePostAction(postId: string, formData: FormData): Prom
 }
 
 export async function deletePostAction(postId: string): Promise<ActionResult> {
+    // ... (kode fungsi ini tetap sama)
     const supabase = createSupabaseActionClient();
     try {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error('Authentication required.');
-        
+
         const { data: post } = await supabase.from('posts').select('image_url').eq('id', postId).single();
         if(post?.image_url) {
             const filePath = new URL(post.image_url).pathname.split('/blog_images/')[1];
@@ -235,15 +266,14 @@ export async function deletePostAction(postId: string): Promise<ActionResult> {
     }
 }
 
-// --- PERBAIKAN UTAMA DI SINI ---
 export async function getBlogAdsConfigAction() {
+    // ... (kode fungsi ini tetap sama)
     const supabase = createSupabaseActionClient();
     try {
         const { data, error } = await supabase
             .from('blog_ads')
             .select('*');
-            // .eq('is_active', true); // <-- BARIS INI DIHAPUS/DIKOMENTARI
-            
+
         if (error) throw error;
         return { success: true, config: data };
     } catch (error: unknown) {
@@ -251,9 +281,9 @@ export async function getBlogAdsConfigAction() {
         return { error: message, config: [] };
     }
 }
-// --- AKHIR PERBAIKAN ---
 
 export async function updateBlogAdsConfigAction(configs: AdSlotConfig[]) {
+    // ... (kode fungsi ini tetap sama)
     const supabase = createSupabaseActionClient();
     try {
         const upsertData = configs.map(config => ({
@@ -261,14 +291,13 @@ export async function updateBlogAdsConfigAction(configs: AdSlotConfig[]) {
             ad_type: config.ad_type,
             google_script: config.ad_type === 'google_ads' ? config.google_script : null,
             banner_image_url: config.ad_type === 'banner' ? config.banner_image_url : null,
-            // Secara opsional, kita bisa pastikan is_active selalu true saat menyimpan
             is_active: true,
         }));
-        
+
         const { error } = await supabase.from('blog_ads').upsert(upsertData, { onConflict: 'position' });
 
         if (error) throw error;
-        
+
         revalidatePath('/admin/blog/ads');
         revalidatePath('/blog', 'layout');
         return { success: 'Ad configurations saved successfully!' };
@@ -280,6 +309,7 @@ export async function updateBlogAdsConfigAction(configs: AdSlotConfig[]) {
 }
 
 export async function getBlogCategoriesAction() {
+    // ... (kode fungsi ini tetap sama)
     const supabase = createSupabaseActionClient();
     try {
         const { data, error } = await supabase
@@ -289,11 +319,10 @@ export async function getBlogCategoriesAction() {
 
         if (error) throw error;
 
-        // Proses data untuk mendapatkan daftar kategori yang unik, tidak null, dan terurut
         const uniqueCategories = [
             ...new Set(data.map(item => item.category).filter((c): c is string => c !== null))
         ].sort();
-        
+
         return { success: true, categories: uniqueCategories };
     } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'An unknown error occurred.';

@@ -1,3 +1,4 @@
+// src/app/(admin)/admin/products/bundles/BundlesClient.tsx
 'use client'; 
 
 import { useState, useTransition, useMemo, useEffect, useCallback, FormEvent, Fragment } from 'react';
@@ -38,6 +39,7 @@ const Modal = ({ isOpen, onClose, title, children }: { isOpen: boolean, onClose:
   );
 };
 
+// --- PERUBAHAN DI SINI: Tombol "Edit Page" ditambahkan ---
 const BundleActions = ({ bundleId, bundleSlug, onDelete }: { bundleId: string, bundleSlug: string, onDelete: (id: string) => void }) => {
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -60,12 +62,17 @@ const BundleActions = ({ bundleId, bundleSlug, onDelete }: { bundleId: string, b
       <Link href={`/bundles/${bundleSlug}`} target="_blank" className="p-2 text-brand-secondary-green hover:bg-white/10 rounded-md" title="View">
         <Eye size={16} />
       </Link>
+      {/* Tombol Edit Page (Form) */}
+      <Link href={`/admin/products/bundles/${bundleId}/edit`} className="p-2 text-brand-secondary-gold hover:bg-white/10 rounded-md" title="Edit Page">
+        <Edit size={16} />
+      </Link>
       <button onClick={handleDelete} disabled={isDeleting} className="p-2 text-brand-secondary-red hover:bg-white/10 rounded-md disabled:opacity-50" title="Delete">
         {isDeleting ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
       </button>
     </div>
   );
 }
+// --- AKHIR PERUBAHAN ---
 
 interface BundlesClientProps {
   initialBundles: Bundle[];
@@ -80,8 +87,12 @@ export default function BundlesClient({ initialBundles, initialTotalPages, initi
   
   const [selectedBundles, setSelectedBundles] = useState<string[]>([]);
   const [isPending, startTransition] = useTransition();
+  
+  // --- PERUBAHAN DI SINI: State untuk inline editing ---
   const [editingBundleId, setEditingBundleId] = useState<string | null>(null);
   const [editedPrice, setEditedPrice] = useState<number>(0);
+  // --- AKHIR PERUBAHAN ---
+
   const [isManageDiscountOpen, setManageDiscountOpen] = useState(false);
   const [isApplyDiscountOpen, setApplyDiscountOpen] = useState(false);
 
@@ -116,6 +127,7 @@ export default function BundlesClient({ initialBundles, initialTotalPages, initi
     router.replace(`${pathname}?${params.toString()}`);
   }, 300);
 
+  // --- PERUBAHAN DI SINI: Handler untuk inline editing ---
   const handleEditClick = (bundle: Bundle) => {
     setEditingBundleId(bundle.id);
     setEditedPrice(bundle.price);
@@ -127,7 +139,8 @@ export default function BundlesClient({ initialBundles, initialTotalPages, initi
       toast.promise(
         updateBundleInTableAction(bundleId, { price: editedPrice }).then(res => {
           if (res.error) throw new Error(res.error);
-          refreshData();
+          // Perbarui state lokal agar UI update instan
+          setBundles(prev => prev.map(b => b.id === bundleId ? { ...b, price: editedPrice } : b));
           setEditingBundleId(null);
           return res.success;
         }),
@@ -135,6 +148,7 @@ export default function BundlesClient({ initialBundles, initialTotalPages, initi
       );
     });
   };
+  // --- AKHIR PERUBAHAN ---
 
   const handleCreateDiscount = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -247,18 +261,23 @@ export default function BundlesClient({ initialBundles, initialTotalPages, initi
               </thead>
               <tbody>
                 {bundles.map((bundle: Bundle) => {
+                    // --- PERUBAHAN DI SINI ---
                     const isEditing = editingBundleId === bundle.id;
+                    // --- AKHIR PERUBAHAN ---
                     return (
                     <tr key={bundle.id} className={`border-b border-white/10 last:border-b-0 transition-colors ${selectedBundles.includes(bundle.id) ? 'bg-brand-accent/10' : 'hover:bg-white/5'}`}>
                       <td className="p-4"><input type="checkbox" className={checkboxClasses} checked={selectedBundles.includes(bundle.id)} onChange={() => handleSelectOne(bundle.id)} /></td>
                       <td className="p-4"><Image src={bundle.preview_image_urls?.[0] || '/images/dummy/placeholder.jpg'} alt={bundle.name} width={60} height={40} className="rounded-md object-cover bg-white/10" /></td>
                       <td className="p-4 text-brand-light font-medium">{bundle.name}</td>
                       <td className="p-4">
+                        {/* --- PERUBAHAN DI SINI: Input inline edit --- */}
                         {isEditing ? ( <input type="number" value={editedPrice} onChange={(e) => setEditedPrice(Number(e.target.value))} className={inlineInputStyles} step="0.01"/> ) : ( <span className="text-brand-light">${bundle.price?.toFixed(2)}</span> )}
+                        {/* --- AKHIR PERUBAHAN --- */}
                       </td>
                       <td className="p-4">{/* Menu for Discount */}</td>
                       <td className="p-4">{/* Menu for Staff Pick */}</td>
                       <td className="p-4 text-right">
+                         {/* --- PERUBAHAN DI SINI: Logika tombol Actions --- */}
                          <div className="flex items-center justify-end gap-2">
                           {isEditing ? (
                             <>
@@ -272,6 +291,7 @@ export default function BundlesClient({ initialBundles, initialTotalPages, initi
                             </>
                           )}
                         </div>
+                        {/* --- AKHIR PERUBAHAN --- */}
                       </td>
                     </tr>
                     );

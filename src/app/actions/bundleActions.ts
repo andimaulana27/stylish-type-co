@@ -118,10 +118,19 @@ export async function findFontsByNamesAction(fileNames: string[]): Promise<{ id:
 }
 
 
+// --- PERUBAHAN UTAMA PADA FUNGSI INI ---
 export async function updateBundleAction(bundleId: string, formData: FormData) {
   const supabase = createSupabaseActionClient();
   const name = String(formData.get('name'));
   const slug = generateSlug(name);
+
+  // Path file baru (jika ada)
+  const newZipFileUrl = formData.get('downloadable_file_url') as string | null;
+  const newFontPreviewsJson = formData.get('bundle_font_previews_json') as string | null;
+  
+  // Path file lama (untuk dihapus jika file baru diupload)
+  const existingZipPath = formData.get('existing_download_zip_path') as string | null;
+  const existingFontPreviews: BundleFontPreview[] = JSON.parse(formData.get('existing_bundle_font_previews_json') as string || '[]');
 
   try {
     const bundleDataToUpdate: TablesUpdate<'bundles'> = {
@@ -134,11 +143,33 @@ export async function updateBundleAction(bundleId: string, formData: FormData) {
       preview_image_urls: formData.getAll('preview_image_urls').map(String),
     };
 
+    // Jika ada file ZIP baru, tambahkan ke data update
+    if (newZipFileUrl && newFontPreviewsJson) {
+        bundleDataToUpdate.download_zip_path = newZipFileUrl;
+        bundleDataToUpdate.bundle_font_previews = JSON.parse(newFontPreviewsJson) as Json;
+    }
+
     const { error: updateError } = await supabase
       .from('bundles')
       .update(bundleDataToUpdate)
       .eq('id', bundleId);
     if (updateError) throw new Error(`Failed to update bundle details: ${updateError.message}`);
+
+    // --- LOGIKA PENGHAPUSAN FILE LAMA ---
+    if (newZipFileUrl) {
+        // Hapus file ZIP lama
+        if (existingZipPath) {
+            await supabase.storage.from('products').remove([existingZipPath]);
+        }
+        // Hapus file preview font lama
+        const oldPreviewPaths = existingFontPreviews
+            .map(p => new URL(p.url).pathname.split('/font-previews/')[1])
+            .filter(Boolean);
+        if (oldPreviewPaths.length > 0) {
+            await supabase.storage.from('font-previews').remove(oldPreviewPaths);
+        }
+    }
+    // --- AKHIR LOGIKA PENGHAPUSAN ---
 
     const fontIds = formData.getAll('font_ids').map(String);
 
@@ -167,6 +198,7 @@ export async function updateBundleAction(bundleId: string, formData: FormData) {
   revalidatePath(`/admin/products/bundles/${bundleId}/edit`);
   redirect('/admin/products/bundles');
 }
+// --- AKHIR PERUBAHAN FUNGSI ---
 
 export async function deleteBundleAction(bundleId: string) {
     const supabase = createSupabaseActionClient();

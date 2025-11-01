@@ -8,6 +8,18 @@ import { Database, Tables, TablesInsert, TablesUpdate } from '@/lib/database.typ
 import { sendOrderConfirmationEmail, sendSubscriptionConfirmationEmail } from '@/lib/email';
 import { CartItem } from '@/context/UIContext';
 
+// --- Tipe Data Baru untuk Produk di Dashboard ---
+export type MostRecentPurchase = {
+  id: string;
+  name: string;
+  slug: string;
+  imageUrl: string;
+  type: 'font' | 'bundle';
+  licenseName: string | null; // <-- Tambahkan licenseName
+};
+// --- Akhir Tipe Data Baru ---
+
+
 type CartItemForAction = {
   id: string;
   productId: string;
@@ -75,7 +87,7 @@ export async function updateUserProfileAction(formData: FormData) {
             const { data: urlData } = supabase.storage
                 .from('avatars')
                 .getPublicUrl(filePath);
-            
+
             avatar_url = `${urlData.publicUrl}?t=${new Date().getTime()}`;
         }
 
@@ -103,7 +115,7 @@ export async function updateUserProfileAction(formData: FormData) {
         revalidatePath('/account/profile');
         revalidatePath('/', 'layout');
         return { success: 'Profile updated successfully!' };
-        
+
     } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'An unknown error occurred.';
         return { error: message };
@@ -116,7 +128,7 @@ async function updateUserAddressFromCheckout(
   profile: Tables<'profiles'>,
   address: { streetAddress: string; city: string; country: string; postalCode: string }
 ) {
-  const needsUpdate = 
+  const needsUpdate =
     !profile.street_address ||
     profile.street_address !== address.streetAddress ||
     profile.city !== address.city ||
@@ -147,7 +159,7 @@ async function updateUserAddressFromCheckout(
 }
 
 export async function createOrderAction(
-    items: CartItemForAction[], 
+    items: CartItemForAction[],
     totalAmount: number,
     billingAddress: { streetAddress: string; city: string; country: string; postalCode: string; } | null,
     subscriptionInfo?: SubscriptionInfo
@@ -169,7 +181,7 @@ export async function createOrderAction(
         if (profileError || !userProfile) {
             throw new Error("Could not retrieve user profile for email confirmation.");
         }
-        
+
         if (billingAddress && billingAddress.streetAddress) {
           await updateUserAddressFromCheckout(user.id, userProfile, billingAddress);
           Object.assign(userProfile, {
@@ -179,7 +191,7 @@ export async function createOrderAction(
               postal_code: billingAddress.postalCode,
           });
         }
-        
+
         let orderStatus = 'Completed';
         if (subscriptionInfo) {
             orderStatus = 'Subscription Purchase';
@@ -198,10 +210,10 @@ export async function createOrderAction(
             }
             nextBillingDateISO = endDate.toISOString();
 
-            if (activeSubscriptionId) { 
+            if (activeSubscriptionId) {
                 const { error: subError } = await supabase.from('user_subscriptions').update({ plan_id: planId, status: 'active', current_period_start: startDate.toISOString(), current_period_end: nextBillingDateISO }).eq('id', activeSubscriptionId);
                 if (subError) throw subError;
-            } else { 
+            } else {
                 const { error: subError } = await supabase.from('user_subscriptions').insert({ user_id: user.id, plan_id: planId, status: 'active', current_period_start: startDate.toISOString(), current_period_end: nextBillingDateISO });
                 if (subError) throw subError;
             }
@@ -223,7 +235,7 @@ export async function createOrderAction(
                 .eq('id', subscriptionInfo.planId)
                 .single();
             if (planError || !planData) throw new Error("Could not retrieve plan details for email.");
-            
+
             await sendSubscriptionConfirmationEmail(
                 userProfile,
                 orderData,
@@ -251,7 +263,7 @@ export async function createOrderAction(
                   if (rpcError) console.error("Error incrementing font sales count:", rpcError);
               }
             }
-            
+
             await sendOrderConfirmationEmail(userProfile, orderData, items as CartItem[]);
         }
 
@@ -259,6 +271,8 @@ export async function createOrderAction(
         revalidatePath('/account/my-fonts');
         revalidatePath('/account/orders');
         revalidatePath('/account/subscription');
+        // --- Perbarui juga revalidatePath untuk dashboard ---
+        revalidatePath('/account');
         revalidatePath('/admin/dashboard');
         revalidatePath('/admin/products/fonts');
 
@@ -281,6 +295,7 @@ export async function updateUserPasswordAction(formData: FormData) {
     return { success: 'Password updated successfully!' };
 }
 
+// --- FUNGSI DIPERBARUI: Menyertakan nama lisensi ---
 export async function getPurchasedProductsAction() {
     const supabase = createSupabaseActionClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -290,18 +305,22 @@ export async function getPurchasedProductsAction() {
         .from('order_items')
         .select(`
             id,
-            orders!inner(user_id),
+            orders!inner(user_id, status),
+            licenses ( name ),
             fonts (id, name, slug, preview_image_urls, category, download_zip_path),
             bundles (id, name, slug, preview_image_urls, download_zip_path)
         `)
-        .eq('orders.user_id', user.id);
+        .eq('orders.user_id', user.id)
+        // Pastikan hanya mengambil dari order yang valid (bukan grant)
+        .neq('orders.status', 'Subscription Grant');
 
     if (error) {
         console.error('Error fetching purchased products:', error);
         return { error: 'Could not fetch purchased products.' };
     }
-    
+
     const products = data.map(item => {
+        const licenseName = item.licenses?.name ?? null; // Ambil nama lisensi
         if (item.fonts) {
             return {
                 id: item.fonts.id,
@@ -311,6 +330,7 @@ export async function getPurchasedProductsAction() {
                 description: item.fonts.category,
                 type: 'font' as const,
                 download_path: item.fonts.download_zip_path,
+                licenseName: licenseName, // Sertakan nama lisensi
             };
         }
         if (item.bundles) {
@@ -322,13 +342,139 @@ export async function getPurchasedProductsAction() {
                 description: 'Bundle',
                 type: 'bundle' as const,
                 download_path: item.bundles.download_zip_path,
+                licenseName: licenseName, // Sertakan nama lisensi
             };
         }
         return null;
     }).filter(Boolean);
 
-    return { products: products as NonNullable<typeof products[number]>[] };
+    // --- Pastikan tipe data NonNullable<typeof products[number]> mencakup licenseName ---
+    type PurchasedProductWithLicense = NonNullable<typeof products[number]>;
+    return { products: products as PurchasedProductWithLicense[] };
 }
+// --- AKHIR PERUBAHAN ---
+
+// --- FUNGSI BARU: Mengambil produk terbaru yang dibeli ---
+export async function getMostRecentPurchaseAction(): Promise<{ data: MostRecentPurchase | null, error?: string }> {
+    const supabase = createSupabaseActionClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { data: null, error: 'User not authenticated' };
+
+    try {
+        const { data: recentItem, error } = await supabase
+            .from('order_items')
+            .select(`
+                id,
+                orders!inner(user_id, created_at, status),
+                licenses ( name ),
+                fonts (id, name, slug, preview_image_urls, category),
+                bundles (id, name, slug, preview_image_urls)
+            `)
+            .eq('orders.user_id', user.id)
+            .neq('orders.status', 'Subscription Grant') // Jangan ambil grant
+            .neq('orders.status', 'Subscription Purchase') // Jangan ambil pembelian langganan
+            .order('created_at', { referencedTable: 'orders', ascending: false })
+            .limit(1)
+            .maybeSingle(); // Gunakan maybeSingle jika user mungkin belum beli
+
+        if (error) throw error;
+        if (!recentItem) return { data: null }; // User belum pernah beli
+
+        const licenseName = recentItem.licenses?.name ?? null;
+
+        if (recentItem.fonts) {
+            return {
+                data: {
+                    id: recentItem.fonts.id,
+                    name: recentItem.fonts.name,
+                    slug: recentItem.fonts.slug,
+                    imageUrl: recentItem.fonts.preview_image_urls?.[0] ?? '/images/dummy/placeholder.jpg',
+                    type: 'font',
+                    licenseName: licenseName,
+                }
+            };
+        } else if (recentItem.bundles) {
+            return {
+                data: {
+                    id: recentItem.bundles.id,
+                    name: recentItem.bundles.name,
+                    slug: recentItem.bundles.slug,
+                    imageUrl: recentItem.bundles.preview_image_urls?.[0] ?? '/images/dummy/placeholder.jpg',
+                    type: 'bundle',
+                    licenseName: licenseName,
+                }
+            };
+        }
+
+        return { data: null }; // Item ada tapi bukan font/bundle (seharusnya tidak terjadi)
+
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'An unknown error occurred.';
+        console.error('Error fetching most recent purchase:', message);
+        return { data: null, error: 'Could not fetch most recent purchase.' };
+    }
+}
+// --- AKHIR FUNGSI BARU ---
+
+// --- FUNGSI BARU DITAMBAHKAN ---
+export async function getRecentPurchasesAction(limit_count: number): Promise<{ data: MostRecentPurchase[], error?: string }> {
+    const supabase = createSupabaseActionClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { data: [], error: 'User not authenticated' };
+
+    try {
+        const { data: recentItems, error } = await supabase
+            .from('order_items')
+            .select(`
+                id,
+                orders!inner(user_id, created_at, status),
+                licenses ( name ),
+                fonts (id, name, slug, preview_image_urls, category),
+                bundles (id, name, slug, preview_image_urls)
+            `)
+            .eq('orders.user_id', user.id)
+            .neq('orders.status', 'Subscription Grant')
+            .neq('orders.status', 'Subscription Purchase')
+            .order('created_at', { referencedTable: 'orders', ascending: false })
+            .limit(limit_count); // Gunakan limit dinamis
+
+        if (error) throw error;
+        if (!recentItems) return { data: [] };
+
+        const products: MostRecentPurchase[] = recentItems.map(item => {
+            const licenseName = item.licenses?.name ?? null;
+            if (item.fonts) {
+                return {
+                    id: item.fonts.id,
+                    name: item.fonts.name,
+                    slug: item.fonts.slug,
+                    imageUrl: item.fonts.preview_image_urls?.[0] ?? '/images/dummy/placeholder.jpg',
+                    type: 'font' as const,
+                    licenseName: licenseName,
+                };
+            } else if (item.bundles) {
+                return {
+                    id: item.bundles.id,
+                    name: item.bundles.name,
+                    slug: item.bundles.slug,
+                    imageUrl: item.bundles.preview_image_urls?.[0] ?? '/images/dummy/placeholder.jpg',
+                    type: 'bundle' as const,
+                    licenseName: licenseName,
+                };
+            }
+            return null;
+        }).filter((p): p is MostRecentPurchase => p !== null); // Filter null
+
+        return { data: products };
+
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'An unknown error occurred.';
+        console.error('Error fetching recent purchases:', message);
+        return { data: [], error: 'Could not fetch recent purchases.' };
+    }
+}
+// --- AKHIR FUNGSI BARU ---
+
 
 export async function getOrderHistoryAction() {
     const supabase = createSupabaseActionClient();
@@ -340,12 +486,12 @@ export async function getOrderHistoryAction() {
         .select(`id, created_at, total_amount, status, order_items (id)`)
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
-        
-    if (error) { 
-        console.error('Error fetching order history:', error); 
-        return { error: 'Could not fetch order history.' }; 
+
+    if (error) {
+        console.error('Error fetching order history:', error);
+        return { error: 'Could not fetch order history.' };
     }
-    
+
     const filteredData = (data || []).filter(order => {
         if (order.status === 'Subscription Grant' || order.status === 'Subscription Purchase') {
             return false;
@@ -355,9 +501,9 @@ export async function getOrderHistoryAction() {
         }
         return true;
     });
-    
+
     const orders = filteredData.map(order => ({ ...order, item_count: order.order_items.length }));
-    
+
     return { orders };
 }
 
@@ -382,7 +528,7 @@ export async function getUsersForAdminAction(options: { page: number, limit: num
       .range(start, end);
 
     if (error) throw error;
-    
+
     return { data, count, error: null };
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'An unknown error occurred.';
@@ -412,7 +558,7 @@ export async function deleteUserAction(userId: string) {
     const cookieStore = cookies();
     const supabase = createServerClient<Database>(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!, // Gunakan service role key untuk menghapus user auth
         {
             cookies: {
                 get(name: string) { return cookieStore.get(name)?.value; },
@@ -423,16 +569,20 @@ export async function deleteUserAction(userId: string) {
     );
 
     try {
+        // Hapus pengguna dari Supabase Auth
         const { error } = await supabase.auth.admin.deleteUser(userId);
         if (error) throw error;
+        // Profil akan otomatis terhapus oleh trigger jika sudah di-setup di database
 
         revalidatePath('/admin/users');
         return { success: 'User deleted successfully!' };
     } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'An unknown error occurred.';
-        return { error: message };
+        console.error("Error deleting user:", message); // Log error
+        return { error: `Failed to delete user: ${message}` };
     }
 }
+
 
 export async function addFontToLibraryAction(productId: string, licenseId: string, productType: 'font' | 'bundle') {
     const supabase = createSupabaseActionClient();
@@ -441,14 +591,14 @@ export async function addFontToLibraryAction(productId: string, licenseId: strin
     if (!user) {
         return { error: 'You must be logged in.' };
     }
-    
+
     try {
         const { data: orderData, error: orderError } = await supabase
             .from('orders')
             .insert({
                 user_id: user.id,
                 total_amount: 0,
-                status: 'Subscription Grant',
+                status: 'Subscription Grant', // Status khusus untuk item dari langganan
             })
             .select()
             .single();
@@ -462,7 +612,7 @@ export async function addFontToLibraryAction(productId: string, licenseId: strin
                 font_id: productType === 'font' ? productId : null,
                 bundle_id: productType === 'bundle' ? productId : null,
                 license_id: licenseId,
-                price: 0
+                price: 0 // Harga 0 karena dari langganan
             });
 
         if (itemError) throw itemError;
@@ -481,11 +631,11 @@ export async function getAuthorsForAdminAction() {
         const { data, error } = await supabase
             .from('profiles')
             .select('id, full_name')
-            .eq('role', 'admin')
+            .eq('role', 'admin') // Atau peran lain yang relevan
             .order('full_name', { ascending: true });
 
         if (error) throw error;
-        
+
         return { authors: data };
     } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'An unknown error occurred.';
@@ -502,8 +652,32 @@ export async function getDownloadUrlAction(productId: string, productType: 'font
     }
 
     try {
-        let download_path: string | null | undefined = null;
+        // 1. Verifikasi kepemilikan
+        const { data: ownedItem, error: checkError } = await supabase
+            .from('order_items')
+            .select('id')
+            .eq('orders.user_id', user.id)
+            .eq(productType === 'font' ? 'font_id' : 'bundle_id', productId)
+            .limit(1)
+            .single(); // Cukup cari satu saja
 
+        if (checkError || !ownedItem) {
+            // Jika tidak ditemukan di pembelian biasa, cek langganan aktif
+            const { data: activeSub } = await supabase
+                .from('user_subscriptions')
+                .select('id')
+                .eq('user_id', user.id)
+                .in('status', ['active', 'trialing'])
+                .limit(1)
+                .single();
+
+            if (!activeSub) {
+                return { error: 'You do not own this product or have an active subscription.' };
+            }
+        }
+
+        // 2. Ambil path file
+        let download_path: string | null | undefined = null;
         if (productType === 'font') {
             const { data: font } = await supabase.from('fonts').select('download_zip_path').eq('id', productId).single();
             download_path = font?.download_zip_path;
@@ -511,27 +685,25 @@ export async function getDownloadUrlAction(productId: string, productType: 'font
             const { data: bundle } = await supabase.from('bundles').select('download_zip_path').eq('id', productId).single();
             download_path = bundle?.download_zip_path;
         }
-        
+
         if (!download_path) {
             return { error: 'Downloadable file not found for this product.' };
         }
 
-        // --- PERUBAHAN UTAMA DI SINI ---
-        // Durasi diubah menjadi 604800 detik (7 hari) sesuai batas maksimal Supabase
-        const { data, error } = await supabase.storage.from('products').createSignedUrl(download_path, 604800);
-        // --- AKHIR PERUBAHAN ---
+        // 3. Buat signed URL
+        const { data, error: urlError } = await supabase.storage.from('products').createSignedUrl(download_path, 604800); // 7 hari
 
-        if (error) {
-            throw error;
-        }
+        if (urlError) throw urlError;
 
         return { success: true, url: data.signedUrl };
 
     } catch (error: unknown) {
         const message = error instanceof Error ? error.message : `An unknown error occurred.`;
+        console.error("Error generating download URL:", message); // Log error
         return { error: `Failed to get download link: ${message}` };
     }
 }
+
 
 export async function updateUserPaypalAction(paypalSubscriptionId: string) {
     const supabase = createSupabaseActionClient();
@@ -549,14 +721,14 @@ export async function updateUserPaypalAction(paypalSubscriptionId: string) {
             .from('user_subscriptions')
             .select('id')
             .eq('user_id', user.id)
-            .in('status', ['active', 'trialing'])
+            .in('status', ['active', 'trialing']) // Hanya update langganan aktif
             .single();
-        
+
         if (fetchError || !activeSubscription) {
             return { error: 'No active subscription found to update.' };
         }
 
-        const { error: updateError } = await supabase 
+        const { error: updateError } = await supabase
             .from('user_subscriptions')
             .update({ paypal_subscription_id: paypalSubscriptionId })
             .eq('id', activeSubscription.id);

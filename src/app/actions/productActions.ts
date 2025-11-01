@@ -22,6 +22,150 @@ type FontWithDiscounts = Tables<'fonts'> & {
   discounts: Pick<Discount, 'name' | 'percentage'> | null;
 };
 
+const createSupabaseActionClient = () => {
+    const cookieStore = cookies();
+    return createServerClient<Database>(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+            cookies: {
+                get(name: string) { return cookieStore.get(name)?.value; },
+                set(name: string, value: string, options: CookieOptions) { cookieStore.set(name, value, options); },
+                remove(name: string, options: CookieOptions) { cookieStore.set(name, '', options); },
+            },
+        }
+    );
+};
+
+const generateSlug = (name: string): string => {
+  return name
+    .toLowerCase()
+    .replace(/&/g, 'and')
+    .replace(/[^a-z0-9-]+/g, ' ')
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-');
+};
+
+const getFileSizeInKB = (bytes: number): number => (bytes === 0 ? 0 : parseFloat((bytes / 1024).toFixed(2)));
+
+const getFontStyle = (fileName: string): string => {
+  const nameWithoutExt = fileName.replace(/\.[^/.]+$/, "");
+  const nameParts = nameWithoutExt.split(/[-_ ]+/);
+  const styleKeywords: { [key: string]: string } = {
+    'thin': 'Thin', 'extralight': 'ExtraLight', 'light': 'Light', 'regular': 'Regular',
+    'medium': 'Medium', 'semibold': 'SemiBold', 'bold': 'Bold', 'extrabold': 'ExtraBold',
+    'black': 'Black', 'italic': 'Italic', 'bolditalic': 'Bold Italic'
+  };
+  for (let i = nameParts.length - 1; i >= 0; i--) {
+    const part = nameParts[i].toLowerCase();
+    if (styleKeywords[part]) return styleKeywords[part];
+  }
+  return 'Regular';
+};
+
+export async function addFontAction(formData: FormData) {
+  const supabase = createSupabaseActionClient();
+  const name = String(formData.get('name'));
+  const slug = generateSlug(name);
+
+  const downloadableFileUrl = String(formData.get('downloadable_file_url'));
+  const uploadedFontPreviewPaths: string[] = [];
+
+  try {
+    const category = String(formData.get('category')) || null;
+    const partnerId = String(formData.get('partner_id')) || null;
+    const tags = String(formData.get('tags')).split(',').map(tag => tag.trim()).filter(Boolean);
+    const purpose_tags = String(formData.get('purpose_tags')).split(',').map(tag => tag.trim()).filter(Boolean);
+    const price = Number(formData.get('price'));
+    const main_description = String(formData.get('main_description')) || null;
+    const glyphs_json = JSON.parse(String(formData.get('glyphs_json') || '[]'));
+    const preview_image_urls = formData.getAll('preview_image_urls').map(String);
+
+    if (!downloadableFileUrl) throw new Error('Font ZIP path is missing.');
+
+    if (preview_image_urls.length > 20) {
+        throw new Error('A maximum of 20 preview images is allowed.');
+    }
+
+    if (!name) throw new Error('Font name is required.');
+    if (isNaN(price)) throw new Error('Price must be a valid number.');
+
+    const { data: zipBlob, error: downloadError } = await supabase.storage
+        .from('products')
+        .download(downloadableFileUrl);
+
+    if (downloadError) throw new Error(`Failed to download ZIP from storage: ${downloadError.message}`);
+
+    const zipBuffer = Buffer.from(await zipBlob.arrayBuffer());
+    const zip = new AdmZip(zipBuffer);
+    const zipEntries = zip.getEntries();
+    const fontFilesForTypetester: FontFile[] = [];
+    const fileTypes = new Set<string>();
+
+    for (const entry of zipEntries) {
+      const isFontFile = !entry.isDirectory && /\.(otf|ttf|woff|woff2)$/i.test(entry.name);
+      if (isFontFile) {
+        const fileExt = entry.name.split('.').pop()!.toLowerCase();
+        fileTypes.add(fileExt.toUpperCase());
+
+        if (fileExt === 'otf') {
+          const fontBuffer = entry.getData();
+          const styleName = getFontStyle(entry.name);
+
+          const fontPreviewPath = `${slug}/styles/${entry.name}`;
+          const { error: fontUploadError } = await supabase.storage
+              .from('font-previews')
+              .upload(fontPreviewPath, fontBuffer, { upsert: true, cacheControl: '31536000' });
+
+          if (fontUploadError) throw new Error(`Failed to upload ${entry.name} for preview: ${fontUploadError.message}`);
+
+          uploadedFontPreviewPaths.push(fontPreviewPath);
+
+          const { data: { publicUrl } } = supabase.storage.from('font-previews').getPublicUrl(fontPreviewPath);
+          fontFilesForTypetester.push({ style: styleName, url: publicUrl });
+        }
+      }
+    }
+
+    if (fontFilesForTypetester.length === 0) {
+        throw new Error('No .otf font files found in the ZIP archive for Typetester. Please include at least one .otf file.');
+    }
+
+    const fontDataToInsert: TablesInsert<'fonts'> = {
+      name, slug, category, tags, price, main_description,
+      partner_id: partnerId === 'null' ? null : partnerId,
+      purpose_tags,
+      preview_image_urls,
+      font_files: fontFilesForTypetester as Json,
+      glyphs_json,
+      download_zip_path: downloadableFileUrl,
+      staff_pick: false,
+      file_size_kb: getFileSizeInKB(zipBlob.size),
+      file_types: Array.from(fileTypes),
+    };
+
+    const { error: insertError } = await supabase.from('fonts').insert(fontDataToInsert);
+    if (insertError) throw new Error(`Database insert failed: ${insertError.message}`);
+
+  } catch (error: unknown) {
+    if (uploadedFontPreviewPaths.length > 0) {
+        await supabase.storage.from('font-previews').remove(uploadedFontPreviewPaths);
+    }
+    if (downloadableFileUrl) {
+        await supabase.storage.from('products').remove([downloadableFileUrl]);
+    }
+    if (error instanceof Error) {
+      return { error: error.message };
+    }
+    return { error: 'An unexpected error occurred during font creation.' };
+  }
+
+  revalidatePath('/admin/products/fonts');
+  revalidatePath('/fonts');
+  redirect('/admin/products/fonts');
+}
+
 
 export async function getAllProductsForMarqueeAction({
   productType,
@@ -29,7 +173,7 @@ export async function getAllProductsForMarqueeAction({
   productType: 'font' | 'bundle';
 }) {
   const supabase = createSupabaseActionClient();
-  
+
   try {
     if (productType === 'bundle') {
       const { data, error } = await supabase
@@ -38,7 +182,7 @@ export async function getAllProductsForMarqueeAction({
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      
+
       return {
         products: ((data as BundleWithDiscounts[]) || []).map(bundle => {
           const discountInfo = bundle.discounts;
@@ -50,7 +194,7 @@ export async function getAllProductsForMarqueeAction({
               finalPrice = originalPrice - (originalPrice * discountInfo.percentage / 100);
               discountString = `${discountInfo.percentage}% OFF`;
           }
-          
+
           return {
             id: bundle.id, name: bundle.name, slug: bundle.slug,
             imageUrl: bundle.preview_image_urls?.[0] ?? '/images/dummy/placeholder.jpg',
@@ -69,7 +213,7 @@ export async function getAllProductsForMarqueeAction({
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      
+
       return {
         products: ((data as FontWithDiscounts[]) || []).map(font => {
           const discountInfo = font.discounts;
@@ -81,7 +225,7 @@ export async function getAllProductsForMarqueeAction({
               finalPrice = originalPrice - (originalPrice * discountInfo.percentage / 100);
               discountString = `${discountInfo.percentage}% OFF`;
           }
-          
+
           return {
             id: font.id, name: font.name, slug: font.slug,
             imageUrl: font.preview_image_urls?.[0] ?? '/images/dummy/placeholder.jpg',
@@ -112,7 +256,7 @@ export async function getAllFontsForMarqueeAction() {
             .limit(30);
 
         if (error) throw error;
-        
+
         const formattedFonts: ProductData[] = ((fonts as FontWithDiscounts[]) || []).map(font => {
             const discountInfo = font.discounts;
             const originalPrice = font.price ?? 0;
@@ -123,7 +267,7 @@ export async function getAllFontsForMarqueeAction() {
                 finalPrice = originalPrice - (originalPrice * discountInfo.percentage / 100);
                 discountString = `${discountInfo.percentage}% OFF`;
             }
-            
+
             return {
                 id: font.id,
                 name: font.name,
@@ -137,7 +281,7 @@ export async function getAllFontsForMarqueeAction() {
                 staffPick: font.staff_pick ?? false,
             };
         });
-        
+
         return { products: formattedFonts };
 
     } catch (error: unknown) {
@@ -162,47 +306,6 @@ export async function getAllFontsForPairingAction() {
     }
 }
 
-const generateSlug = (name: string): string => {
-  return name
-    .toLowerCase()
-    .replace(/&/g, 'and')
-    .replace(/[^a-z0-9-]+/g, ' ')
-    .trim()
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-');
-};
-const getFileSizeInKB = (bytes: number): number => (bytes === 0 ? 0 : parseFloat((bytes / 1024).toFixed(2)));
-
-const getFontStyle = (fileName: string): string => {
-  const nameWithoutExt = fileName.replace(/\.[^/.]+$/, "");
-  const nameParts = nameWithoutExt.split(/[-_ ]+/);
-  const styleKeywords: { [key: string]: string } = {
-    'thin': 'Thin', 'extralight': 'ExtraLight', 'light': 'Light', 'regular': 'Regular',
-    'medium': 'Medium', 'semibold': 'SemiBold', 'bold': 'Bold', 'extrabold': 'ExtraBold',
-    'black': 'Black', 'italic': 'Italic', 'bolditalic': 'Bold Italic'
-  };
-  for (let i = nameParts.length - 1; i >= 0; i--) {
-    const part = nameParts[i].toLowerCase();
-    if (styleKeywords[part]) return styleKeywords[part];
-  }
-  return 'Regular';
-};
-
-const createSupabaseActionClient = () => {
-    const cookieStore = cookies();
-    return createServerClient<Database>(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-            cookies: {
-                get(name: string) { return cookieStore.get(name)?.value; },
-                set(name: string, value: string, options: CookieOptions) { cookieStore.set(name, value, options); },
-                remove(name: string, options: CookieOptions) { cookieStore.set(name, '', options); },
-            },
-        }
-    );
-};
-
 export async function getMegaMenuProductsAction() {
   const supabase = createSupabaseActionClient();
   try {
@@ -222,9 +325,10 @@ export async function getMegaMenuProductsAction() {
     if (latestFontsRes.error) throw latestFontsRes.error;
     if (latestBundlesRes.error) throw latestBundlesRes.error;
 
-    const latestFonts = ((latestFontsRes.data as FontWithDiscounts[]) || []).map(font => {
-        const discountInfo = font.discounts;
-        const originalPrice = font.price ?? 0;
+    // --- PERBAIKAN DI SINI ---
+    const formatProduct = (product: any, type: 'font' | 'bundle'): ProductData & { category: string } => {
+        const discountInfo = product.discounts;
+        const originalPrice = product.price ?? 0;
         let finalPrice = originalPrice;
         let discountString: string | undefined = undefined;
 
@@ -232,43 +336,28 @@ export async function getMegaMenuProductsAction() {
             finalPrice = originalPrice - (originalPrice * discountInfo.percentage / 100);
             discountString = `${discountInfo.percentage}% OFF`;
         }
+        const description = type === 'font' ? (product.category ?? 'Font') : 'Styles: Various';
 
         return {
-          id: font.id,
-          name: font.name,
-          slug: font.slug,
-          imageUrl: font.preview_image_urls?.[0] ?? '/images/dummy/placeholder.jpg',
+          id: product.id,
+          name: product.name,
+          slug: product.slug,
+          imageUrl: product.preview_image_urls?.[0] ?? '/images/dummy/placeholder.jpg',
           price: finalPrice,
           originalPrice: discountInfo ? originalPrice : undefined,
-          category: font.category ?? 'Font',
+          description: description,
+          // --- PERBAIKAN TIPE ERROR ---
+          // Ganti 'undefined' menjadi string 'Bundle'
+          category: type === 'font' ? (product.category ?? 'Font') : 'Bundle',
+          type: type,
           discount: discountString,
-          staffPick: font.staff_pick ?? false,
+          staffPick: product.staff_pick ?? false,
         };
-    });
+    };
+    // --- AKHIR PERBAIKAN ---
 
-    const latestBundles = ((latestBundlesRes.data as BundleWithDiscounts[]) || []).map(bundle => {
-        const discountInfo = bundle.discounts;
-        const originalPrice = bundle.price ?? 0;
-        let finalPrice = originalPrice;
-        let discountString: string | undefined = undefined;
-
-        if (discountInfo && discountInfo.percentage > 0) {
-            finalPrice = originalPrice - (originalPrice * discountInfo.percentage / 100);
-            discountString = `${discountInfo.percentage}% OFF`;
-        }
-        
-        return {
-          id: bundle.id,
-          name: bundle.name,
-          slug: bundle.slug,
-          imageUrl: bundle.preview_image_urls?.[0] ?? '/images/dummy/placeholder.jpg',
-          price: finalPrice,
-          originalPrice: discountInfo ? originalPrice : undefined,
-          category: 'Styles: Various',
-          discount: discountString,
-          staffPick: bundle.staff_pick ?? false,
-        };
-    });
+    const latestFonts = ((latestFontsRes.data as FontWithDiscounts[]) || []).map(f => formatProduct(f, 'font'));
+    const latestBundles = ((latestBundlesRes.data as BundleWithDiscounts[]) || []).map(b => formatProduct(b, 'bundle'));
 
     return { latestFonts, latestBundles };
   } catch (error: unknown) {
@@ -388,7 +477,7 @@ export async function getStaffPickFontsForMarqueeAction(currentProductId?: strin
                 staffPick: font.staff_pick ?? false,
             };
         });
-        
+
         return { products: formattedFonts };
 
     } catch (error: unknown) {
@@ -410,118 +499,20 @@ export async function updateFontInTableAction(fontId: string, updates: { price?:
     return { success: 'Font updated successfully!' };
 }
 
-
-export async function addFontAction(formData: FormData) {
-  const supabase = createSupabaseActionClient();
-  const name = String(formData.get('name'));
-  const slug = generateSlug(name);
-  const timestamp = Date.now();
-  
-  let uploadedZipPath: string | null = null;
-  const uploadedFontPreviewFiles: string[] = [];
-  
-  const preview_image_urls = formData.getAll('preview_image_urls').map(String);
-
-  try {
-    const category = String(formData.get('category')) || null;
-    const partnerId = String(formData.get('partner_id')) || null;
-    const tags = String(formData.get('tags')).split(',').map(tag => tag.trim()).filter(Boolean);
-    const purpose_tags = String(formData.get('purpose_tags')).split(',').map(tag => tag.trim()).filter(Boolean);
-    const price = Number(formData.get('price'));
-    const main_description = String(formData.get('main_description')) || null;
-    const zipFile = formData.get('zipFile') as File;
-    const glyphs_json = JSON.parse(String(formData.get('glyphs_json') || '[]'));
-    
-    if (!zipFile || zipFile.size === 0) throw new Error('Font ZIP file is required.');
-    if (preview_image_urls.length < 15) throw new Error('A minimum of 15 preview images is required.');
-    if (preview_image_urls.length > 20) throw new Error('A maximum of 20 preview images is allowed.');
-    if (!name) throw new Error('Font name is required.');
-    if (isNaN(price)) throw new Error('Price must be a valid number.');
-    
-    const zipBuffer = Buffer.from(await zipFile.arrayBuffer());
-    const zip = new AdmZip(zipBuffer);
-    const zipEntries = zip.getEntries();
-    const fontFiles: FontFile[] = [];
-    const fileTypes = new Set<string>();
-
-    for (const entry of zipEntries) {
-      const isFontFile = !entry.isDirectory && /\.(otf|ttf|woff|woff2)$/i.test(entry.name);
-      if (isFontFile) {
-        const fileExt = entry.name.split('.').pop()!.toLowerCase();
-        fileTypes.add(fileExt.toUpperCase());
-        
-        if (fileExt === 'otf') {
-          const fontBuffer = entry.getData();
-          const styleName = getFontStyle(entry.name);
-          
-          const fontPreviewPath = `${slug}/styles/${entry.name}`;
-          const { error: fontUploadError } = await supabase.storage
-              .from('font-previews')
-              .upload(fontPreviewPath, fontBuffer, { 
-                  upsert: true,
-                  cacheControl: '31536000' 
-              });
-
-          if (fontUploadError) throw new Error(`Failed to upload ${entry.name}: ${fontUploadError.message}`);
-          uploadedFontPreviewFiles.push(fontPreviewPath);
-          
-          const { data: { publicUrl } } = supabase.storage.from('font-previews').getPublicUrl(fontPreviewPath);
-          fontFiles.push({ style: styleName, url: publicUrl });
-        }
-      }
-    }
-    
-    if (fontFiles.length === 0) {
-        throw new Error('No .otf font files found in the ZIP archive for preview generation. Please include at least one .otf file.');
-    }
-    
-    const downloadZipPath = `protected/fonts/${slug}-${timestamp}.zip`;
-    const { error: zipUploadError } = await supabase.storage
-        .from('products')
-        .upload(downloadZipPath, zipBuffer, {
-            cacheControl: '31536000'
-        });
-    if (zipUploadError) throw new Error(`ZIP upload failed: ${zipUploadError.message}`);
-    uploadedZipPath = downloadZipPath;
-
-    const fontDataToInsert: TablesInsert<'fonts'> = {
-      name, slug, category, tags, price, main_description,
-      partner_id: partnerId === 'null' ? null : partnerId,
-      purpose_tags,
-      preview_image_urls,
-      font_files: fontFiles as Json,
-      glyphs_json,
-      download_zip_path: downloadZipPath,
-      file_size_kb: getFileSizeInKB(zipFile.size),
-      file_types: Array.from(fileTypes),
-      staff_pick: false,
-    };
-
-    const { error: insertError } = await supabase.from('fonts').insert(fontDataToInsert);
-    if (insertError) throw new Error(`Database insert failed: ${insertError.message}`);
-
-  } catch (error: unknown) {
-      if (uploadedFontPreviewFiles.length > 0) {
-        await supabase.storage.from('font-previews').remove(uploadedFontPreviewFiles);
-      }
-      if (uploadedZipPath) {
-          await supabase.storage.from('products').remove([uploadedZipPath]);
-      }
-    if (error instanceof Error) {
-      return { error: error.message };
-    }
-    return { error: 'An unexpected error occurred during font creation.' };
-  }
-
-  revalidatePath('/admin/products/fonts');
-  revalidatePath('/product');
-  redirect('/admin/products/fonts');
-}
-
 export async function updateFontAction(fontId: string, formData: FormData) {
   const supabase = createSupabaseActionClient();
   const slug = String(formData.get('slug'));
   const partnerId = String(formData.get('partner_id')) || null;
+
+  // Data file baru (jika ada)
+  const newDownloadableFileUrl = formData.get('downloadable_file_url') as string | null;
+  // Data file lama (untuk dihapus)
+  const existingDownloadZipPath = formData.get('existing_download_zip_path') as string | null;
+  const existingFontFiles: FontFile[] = JSON.parse(formData.get('existing_font_files_json') as string || '[]');
+
+  const uploadedFontPreviewPaths: string[] = []; // Untuk cleanup jika gagal
+  const filesToDeleteFromProducts: string[] = [];
+  const filesToDeleteFromPreviews: string[] = [];
 
   try {
     const fontDataToUpdate: TablesUpdate<'fonts'> = {
@@ -533,9 +524,73 @@ export async function updateFontAction(fontId: string, formData: FormData) {
       partner_id: partnerId === 'null' ? null : partnerId,
       tags: String(formData.get('tags')).split(',').map(tag => tag.trim()).filter(Boolean),
       purpose_tags: String(formData.get('purpose_tags')).split(',').map(tag => tag.trim()).filter(Boolean),
-      staff_pick: formData.get('staff_pick') === 'on',
       preview_image_urls: formData.getAll('preview_image_urls').map(String),
     };
+
+    // --- LOGIKA PEMBARUAN FILE ---
+    if (newDownloadableFileUrl) {
+        fontDataToUpdate.download_zip_path = newDownloadableFileUrl;
+        fontDataToUpdate.glyphs_json = JSON.parse(String(formData.get('glyphs_json') || '[]'));
+
+        // Unduh dan proses ZIP baru (seperti di addFontAction)
+        const { data: zipBlob, error: downloadError } = await supabase.storage
+            .from('products')
+            .download(newDownloadableFileUrl);
+        if (downloadError) throw new Error(`Failed to download new ZIP: ${downloadError.message}`);
+
+        const zipBuffer = Buffer.from(await zipBlob.arrayBuffer());
+        const zip = new AdmZip(zipBuffer);
+        const zipEntries = zip.getEntries();
+        const fontFilesForTypetester: FontFile[] = [];
+        const fileTypes = new Set<string>();
+
+        for (const entry of zipEntries) {
+            const isFontFile = !entry.isDirectory && /\.(otf|ttf|woff|woff2)$/i.test(entry.name);
+            if (isFontFile) {
+                const fileExt = entry.name.split('.').pop()!.toLowerCase();
+                fileTypes.add(fileExt.toUpperCase());
+
+                if (fileExt === 'otf') {
+                    const fontBuffer = entry.getData();
+                    const styleName = getFontStyle(entry.name);
+                    const fontPreviewPath = `${slug}/styles/${entry.name}`;
+                    
+                    const { error: fontUploadError } = await supabase.storage
+                        .from('font-previews')
+                        .upload(fontPreviewPath, fontBuffer, { upsert: true, cacheControl: '31536000' });
+                    if (fontUploadError) throw new Error(`Failed to upload ${entry.name} for preview: ${fontUploadError.message}`);
+
+                    uploadedFontPreviewPaths.push(fontPreviewPath); // Lacak file baru
+                    const { data: { publicUrl } } = supabase.storage.from('font-previews').getPublicUrl(fontPreviewPath);
+                    fontFilesForTypetester.push({ style: styleName, url: publicUrl });
+                }
+            }
+        }
+
+        if (fontFilesForTypetester.length === 0) {
+            throw new Error('No .otf font files found in the new ZIP. Update failed.');
+        }
+
+        // Tambahkan data file baru ke update
+        fontDataToUpdate.font_files = fontFilesForTypetester as Json;
+        fontDataToUpdate.file_size_kb = getFileSizeInKB(zipBlob.size);
+        fontDataToUpdate.file_types = Array.from(fileTypes);
+
+        // Tandai file lama untuk dihapus
+        if (existingDownloadZipPath) {
+            filesToDeleteFromProducts.push(existingDownloadZipPath);
+        }
+        if (existingFontFiles.length > 0) {
+            const oldPreviewPaths = existingFontFiles
+                .map(f => {
+                    try { return new URL(f.url).pathname.split('/font-previews/')[1]; } 
+                    catch { return null; }
+                })
+                .filter((p): p is string => p !== null);
+            filesToDeleteFromPreviews.push(...oldPreviewPaths);
+        }
+    }
+    // --- AKHIR LOGIKA PEMBARUAN FILE ---
 
     const { error } = await supabase
       .from('fonts')
@@ -545,7 +600,27 @@ export async function updateFontAction(fontId: string, formData: FormData) {
     if (error) {
       throw new Error(`Database update failed: ${error.message}`);
     }
+
+    // --- HAPUS FILE LAMA SETELAH DB SUKSES ---
+    if (filesToDeleteFromProducts.length > 0) {
+        await supabase.storage.from('products').remove(filesToDeleteFromProducts);
+    }
+    if (filesToDeleteFromPreviews.length > 0) {
+        await supabase.storage.from('font-previews').remove(filesToDeleteFromPreviews);
+    }
+    // --- AKHIR PENGHAPUSAN ---
+
   } catch (error: unknown) {
+    // --- CLEANUP JIKA GAGAL ---
+    // Jika update gagal, hapus file baru yang mungkin sudah terupload
+    if (newDownloadableFileUrl) {
+        await supabase.storage.from('products').remove([newDownloadableFileUrl]);
+    }
+    if (uploadedFontPreviewPaths.length > 0) {
+        await supabase.storage.from('font-previews').remove(uploadedFontPreviewPaths);
+    }
+    // --- AKHIR CLEANUP ---
+
     if (error instanceof Error) {
       return { error: error.message };
     }
@@ -553,8 +628,9 @@ export async function updateFontAction(fontId: string, formData: FormData) {
   }
 
   revalidatePath('/admin/products/fonts');
-  revalidatePath(`/product/${slug}`);
+  revalidatePath(`/fonts/${slug}`);
   revalidatePath(`/admin/products/fonts/${fontId}/edit`);
+  // Tidak perlu redirect di sini, biarkan UI client yang menangani
 }
 
 export async function deleteFontAction(fontId: string) {
@@ -566,21 +642,26 @@ export async function deleteFontAction(fontId: string) {
             .select('slug, download_zip_path, preview_image_urls, font_files')
             .eq('id', fontId)
             .single();
-        
+
         if (fetchError && fetchError.code !== 'PGRST116') throw new Error(`Failed to fetch font data: ${fetchError.message}`);
-        if (!font) throw new Error('Font not found.');
+        if (!font) {
+          console.warn(`Font with ID ${fontId} not found for deletion.`);
+          return { success: 'Font already deleted or not found.' }; // Anggap sukses jika tidak ditemukan
+        }
+
 
         const filesToRemoveFromProducts: string[] = [];
         const filesToRemoveFromPreviews: string[] = [];
-        
+
         if(font.preview_image_urls) {
             const imagePaths = font.preview_image_urls.map(url => {
                 try {
                     const urlObject = new URL(url);
-                    return urlObject.pathname.substring(urlObject.pathname.indexOf('/products/') + 1);
-                } catch {
+                    // Ambil path setelah '/products/'
+                    const parts = urlObject.pathname.split('/products/');
+                    if (parts.length > 1) return parts[1];
                     return null;
-                }
+                } catch { return null; }
             }).filter((p): p is string => p !== null);
             filesToRemoveFromProducts.push(...imagePaths);
         }
@@ -589,26 +670,29 @@ export async function deleteFontAction(fontId: string) {
 
         if (font.font_files && Array.isArray(font.font_files)) {
             const typedFontFiles = font.font_files as FontFile[];
-            
             const fontPreviewPaths = typedFontFiles.map(f => {
                 try {
                     const urlObject = new URL(f.url);
-                    return urlObject.pathname.substring(urlObject.pathname.indexOf('/font-previews/') + 1);
-                } catch {
-                    return null;
-                }
+                    // Ambil path setelah '/font-previews/'
+                     const parts = urlObject.pathname.split('/font-previews/');
+                     if (parts.length > 1) return parts[1];
+                     return null;
+                } catch { return null; }
             }).filter((p): p is string => p !== null);
-
             filesToRemoveFromPreviews.push(...fontPreviewPaths);
         }
 
+        // Hapus file dari storage (jangan throw error jika gagal, log saja)
         if (filesToRemoveFromProducts.length > 0) {
-            await supabase.storage.from('products').remove(filesToRemoveFromProducts);
+            const { error: productStorageError } = await supabase.storage.from('products').remove(filesToRemoveFromProducts);
+            if(productStorageError) console.warn("Error removing product files from storage:", productStorageError.message);
         }
         if (filesToRemoveFromPreviews.length > 0) {
-            await supabase.storage.from('font-previews').remove(filesToRemoveFromPreviews);
+            const { error: previewStorageError } = await supabase.storage.from('font-previews').remove(filesToRemoveFromPreviews);
+            if(previewStorageError) console.warn("Error removing font preview files from storage:", previewStorageError.message);
         }
 
+        // Hapus data dari database
         const { error: deleteError } = await supabase.from('fonts').delete().eq('id', fontId);
         if (deleteError) throw new Error(`Failed to delete font from database: ${deleteError.message}`);
 
@@ -618,44 +702,88 @@ export async function deleteFontAction(fontId: string) {
     }
 
     revalidatePath('/admin/products/fonts');
-    revalidatePath('/product');
+    revalidatePath('/fonts');
     return { success: 'Font deleted successfully!' };
 }
 
+
 export async function bulkDeleteFontsAction(fontIds: string[]) {
   const supabase = createSupabaseActionClient();
+  let deletedCount = 0;
+  const errors: string[] = [];
+
   try {
     const { data: fonts, error: fetchError } = await supabase
       .from('fonts')
-      .select('slug, download_zip_path, preview_image_urls, font_files')
+      .select('id, slug, download_zip_path, preview_image_urls, font_files') // Ambil ID juga
       .in('id', fontIds);
 
     if (fetchError) throw new Error(`Failed to fetch fonts for deletion: ${fetchError.message}`);
+    if (!fonts || fonts.length === 0) return { success: 'No matching fonts found to delete.' };
 
-    for (const font of fonts) {
-      if (font.download_zip_path) {
-        await supabase.storage.from('products').remove([font.download_zip_path]);
-      }
+    const existingFontIds = fonts.map(f => f.id); // ID font yang benar-benar ada
+
+    const filesToRemoveFromProducts: string[] = [];
+    const filesToRemoveFromPreviews: string[] = [];
+
+    fonts.forEach(font => {
+      if (font.download_zip_path) filesToRemoveFromProducts.push(font.download_zip_path);
       if (font.preview_image_urls) {
-        const imagePaths = font.preview_image_urls.map(url => new URL(url).pathname.split('/products/')[1]).filter(Boolean);
-        if(imagePaths.length > 0) await supabase.storage.from('products').remove(imagePaths);
+         const imagePaths = font.preview_image_urls.map(url => {
+                try {
+                    const urlObject = new URL(url);
+                    const parts = urlObject.pathname.split('/products/');
+                    if (parts.length > 1) return parts[1];
+                    return null;
+                } catch { return null; }
+            }).filter((p): p is string => p !== null);
+         filesToRemoveFromProducts.push(...imagePaths);
       }
-      if (font.font_files) {
-        const fontFilePaths = (font.font_files as FontFile[]).map(f => new URL(f.url).pathname.split('/font-previews/')[1]).filter(Boolean);
-        if(fontFilePaths.length > 0) await supabase.storage.from('font-previews').remove(fontFilePaths);
+      if (font.font_files && Array.isArray(font.font_files)) {
+         const fontFilePaths = (font.font_files as FontFile[]).map(f => {
+                try {
+                    const urlObject = new URL(f.url);
+                    const parts = urlObject.pathname.split('/font-previews/');
+                    if (parts.length > 1) return parts[1];
+                    return null;
+                } catch { return null; }
+            }).filter((p): p is string => p !== null);
+         filesToRemoveFromPreviews.push(...fontFilePaths);
       }
+    });
+
+     // Hapus file dari storage (jangan throw error jika gagal, log saja)
+    if (filesToRemoveFromProducts.length > 0) {
+        const { error: productStorageError } = await supabase.storage.from('products').remove(filesToRemoveFromProducts);
+        if(productStorageError) errors.push(`Storage (products): ${productStorageError.message}`);
+    }
+    if (filesToRemoveFromPreviews.length > 0) {
+        const { error: previewStorageError } = await supabase.storage.from('font-previews').remove(filesToRemoveFromPreviews);
+        if(previewStorageError) errors.push(`Storage (previews): ${previewStorageError.message}`);
     }
 
-    const { error: deleteError } = await supabase.from('fonts').delete().in('id', fontIds);
-    if (deleteError) throw new Error(`Database bulk delete failed: ${deleteError.message}`);
+    // Hapus data dari database
+    const { error: deleteError } = await supabase.from('fonts').delete().in('id', existingFontIds);
+    if (deleteError) {
+        throw new Error(`Database bulk delete failed: ${deleteError.message}`);
+    } else {
+        deletedCount = existingFontIds.length;
+    }
 
   } catch (error: unknown) {
-    if (error instanceof Error) return { error: error.message };
-    return { error: 'An unexpected error occurred during bulk deletion.' };
+      if (error instanceof Error) errors.push(error.message);
+      else errors.push('An unexpected error occurred during bulk deletion.');
   }
+
   revalidatePath('/admin/products/fonts');
-  return { success: `${fontIds.length} fonts deleted successfully!` };
+  revalidatePath('/fonts'); // Revalidate halaman publik juga
+
+  if (errors.length > 0) {
+    return { error: `Bulk delete partially failed. ${deletedCount} deleted. Errors: ${errors.join(', ')}` };
+  }
+  return { success: `${deletedCount} fonts deleted successfully!` };
 }
+
 
 export async function updateFontStaffPickAction(fontId: string, isStaffPick: boolean) {
   const supabase = createSupabaseActionClient();
@@ -695,6 +823,7 @@ export async function createDiscountAction(name: string, percentage: number): Pr
     const { error } = await supabase.from('discounts').insert({ name, percentage });
     if (error) return { error: error.message };
     revalidatePath('/admin/products/fonts');
+    revalidatePath('/admin/products/bundles'); // Revalidate bundles juga
     return { success: true };
 }
 
@@ -703,6 +832,7 @@ export async function deleteDiscountAction(discountId: string): Promise<{ succes
     const { error } = await supabase.from('discounts').delete().eq('id', discountId);
     if (error) return { error: error.message };
     revalidatePath('/admin/products/fonts');
+    revalidatePath('/admin/products/bundles'); // Revalidate bundles juga
     return { success: true };
 }
 
@@ -728,14 +858,15 @@ export async function bulkApplyDiscountToAllFontsAction(discountId: string | nul
         const { error } = await supabase
             .from('fonts')
             .update({ discount_id: discountId })
-            .neq('id', '00000000-0000-0000-0000-000000000000'); // Kondisi 'where' untuk mengupdate semua baris
+            // Menggunakan neq untuk memastikan ada kondisi where (lebih aman)
+            .neq('id', '00000000-0000-0000-0000-000000000000');
         if (error) throw new Error(`Database bulk update for all fonts failed: ${error.message}`);
     } catch (error: unknown) {
         if (error instanceof Error) return { error: error.message };
         return { error: 'An unexpected error occurred during bulk discount update for all fonts.' };
     }
     revalidatePath('/admin/products/fonts');
-    revalidatePath('/product');
+    revalidatePath('/fonts');
     return { success: 'Discount successfully applied to all fonts!' };
 }
 
@@ -755,26 +886,34 @@ export async function searchProductsByNameAction(query: string) {
         if (bundlesRes.error) throw bundlesRes.error;
 
         const fonts = (fontsRes.data || []).map(f => ({
-            id: f.id, 
+            id: f.id,
             name: f.name,
             slug: f.slug,
-            imageUrl: f.preview_image_urls?.[0] || '',
+            imageUrl: f.preview_image_urls?.[0] || '/images/dummy/placeholder.jpg', // Default image
             price: f.price,
-            category: f.category || 'Font',
+            description: f.category || 'Font', // Gunakan category sbg description
+            // --- PERBAIKAN DI SINI ---
+            category: f.category || 'Font', // Tambahkan properti category
             type: 'font' as const
         }));
 
         const bundles = (bundlesRes.data || []).map(b => ({
-            id: b.id, 
+            id: b.id,
             name: b.name,
             slug: b.slug,
-            imageUrl: b.preview_image_urls?.[0] || '',
+            imageUrl: b.preview_image_urls?.[0] || '/images/dummy/placeholder.jpg', // Default image
             price: b.price,
-            category: 'Bundle',
+            description: 'Bundle', // Description standar untuk bundle
+            // --- PERBAIKAN DI SINI ---
+            category: 'Bundle', // Tambahkan properti category
             type: 'bundle' as const
         }));
 
-        return { products: [...fonts, ...bundles] };
+        // --- PERBAIKAN DI SINI ---
+        // Pastikan hasil sesuai tipe ProductData & { category: string }
+        const products: (ProductData & { category: string })[] = [...fonts, ...bundles];
+
+        return { products };
 
     } catch (error: unknown) {
         if (error instanceof Error) {
@@ -803,9 +942,10 @@ export async function getSuggestionProductsAction() {
         if (featuredFontsRes.error) throw featuredFontsRes.error;
         if (latestBundlesRes.error) throw latestBundlesRes.error;
 
-        const featuredFonts = ((featuredFontsRes.data as FontWithDiscounts[]) || []).map(f => {
-            const discountInfo = f.discounts;
-            const originalPrice = f.price ?? 0;
+        // --- PERBAIKAN DI SINI: MENYESUAIKAN TIPE RETURN ---
+        const formatProduct = (product: any, type: 'font' | 'bundle'): ProductData & { category: string } => {
+            const discountInfo = product.discounts;
+            const originalPrice = product.price ?? 0;
             let finalPrice = originalPrice;
             let discountString: string | undefined = undefined;
 
@@ -813,45 +953,30 @@ export async function getSuggestionProductsAction() {
                 finalPrice = originalPrice - (originalPrice * discountInfo.percentage / 100);
                 discountString = `${discountInfo.percentage}% OFF`;
             }
+            const description = type === 'font' ? (product.category ?? 'Font') : 'Styles: Various';
 
             return {
-                id: f.id,
-                name: f.name,
-                slug: f.slug,
-                imageUrl: f.preview_image_urls?.[0] ?? '/images/dummy/placeholder.jpg',
+                id: product.id,
+                name: product.name,
+                slug: product.slug,
+                imageUrl: product.preview_image_urls?.[0] ?? '/images/dummy/placeholder.jpg',
                 price: finalPrice,
                 originalPrice: discountInfo ? originalPrice : undefined,
-                category: f.category ?? 'Font',
-                type: 'font' as const,
+                description: description,
+                // --- PERBAIKAN TIPE ERROR ---
+                // Ganti 'undefined' menjadi string 'Bundle'
+                category: type === 'font' ? (product.category ?? 'Font') : 'Bundle',
+                type: type,
                 discount: discountString,
-                staffPick: f.staff_pick ?? false,
+                staffPick: product.staff_pick ?? false,
             };
-        });
-        
-        const latestBundles = ((latestBundlesRes.data as BundleWithDiscounts[]) || []).map(b => {
-             const discountInfo = b.discounts;
-            const originalPrice = b.price ?? 0;
-            let finalPrice = originalPrice;
-            let discountString: string | undefined = undefined;
+        };
+        // --- AKHIR PERBAIKAN ---
 
-            if (discountInfo && discountInfo.percentage > 0) {
-                finalPrice = originalPrice - (originalPrice * discountInfo.percentage / 100);
-                discountString = `${discountInfo.percentage}% OFF`;
-            }
 
-            return {
-                id: b.id,
-                name: b.name,
-                slug: b.slug,
-                imageUrl: b.preview_image_urls?.[0] ?? '/images/dummy/placeholder.jpg',
-                price: finalPrice,
-                originalPrice: discountInfo ? originalPrice : undefined,
-                category: 'Bundle',
-                type: 'bundle' as const,
-                discount: discountString,
-                staffPick: b.staff_pick ?? false,
-            };
-        });
+        const featuredFonts = ((featuredFontsRes.data as FontWithDiscounts[]) || []).map(f => formatProduct(f, 'font'));
+        const latestBundles = ((latestBundlesRes.data as BundleWithDiscounts[]) || []).map(b => formatProduct(b, 'bundle'));
+
 
         return { featuredFonts, latestBundles };
     } catch (error: unknown) {
@@ -875,10 +1000,73 @@ export async function getFontCategoriesAction() {
         const uniqueCategories = [
             ...new Set(data.map(item => item.category).filter((c): c is string => c !== null))
         ].sort();
-        
+
         return { success: true, categories: uniqueCategories };
     } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'An unknown error occurred.';
         return { error: message, categories: [] };
+    }
+}
+
+// --- FUNGSI BARU UNTUK MENGAMBIL SEMUA PRODUK UNTUK NEWSLETTER ---
+export async function getAllProductsForNewsletterAction(): Promise<{ products: ProductData[], error?: string }> {
+    const supabase = createSupabaseActionClient();
+    const PRODUCTS_LIMIT = 500; // Batasi jumlah produk yang diambil (sesuaikan jika perlu)
+
+    try {
+        const [fontsRes, bundlesRes] = await Promise.all([
+            supabase
+                .from('fonts')
+                .select('id, name, slug, preview_image_urls, price, category, staff_pick, discounts ( name, percentage )')
+                .order('created_at', { ascending: false })
+                .limit(PRODUCTS_LIMIT),
+            supabase
+                .from('bundles')
+                .select('id, name, slug, preview_image_urls, price, staff_pick, discounts ( name, percentage )')
+                .order('created_at', { ascending: false })
+                .limit(PRODUCTS_LIMIT)
+        ]);
+
+        if (fontsRes.error) throw fontsRes.error;
+        if (bundlesRes.error) throw bundlesRes.error;
+
+        const formatProduct = (product: any, type: 'font' | 'bundle'): ProductData => {
+            const discountInfo = product.discounts;
+            const originalPrice = product.price ?? 0;
+            let finalPrice = originalPrice;
+            let discountString: string | undefined = undefined;
+
+            if (discountInfo && discountInfo.percentage > 0) {
+                finalPrice = originalPrice - (originalPrice * discountInfo.percentage / 100);
+                discountString = `${discountInfo.percentage}% OFF`;
+            }
+
+            const description = type === 'font' ? (product.category ?? 'Font') : 'Bundle';
+
+            return {
+                id: product.id,
+                name: product.name,
+                slug: product.slug,
+                imageUrl: product.preview_image_urls?.[0] ?? '/images/dummy/placeholder.jpg',
+                price: finalPrice,
+                originalPrice: discountInfo ? originalPrice : undefined,
+                description: description,
+                type: type,
+                discount: discountString,
+                staffPick: product.staff_pick ?? false,
+            };
+        };
+
+        const allProducts = [
+            ...(fontsRes.data || []).map(f => formatProduct(f, 'font')),
+            ...(bundlesRes.data || []).map(b => formatProduct(b, 'bundle'))
+        ];
+
+        return { products: allProducts.slice(0, PRODUCTS_LIMIT) }; // Batasi lagi setelah digabung
+
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'An unknown error occurred while fetching products for newsletter.';
+        console.error("Error in getAllProductsForNewsletterAction:", message);
+        return { products: [], error: message };
     }
 }
