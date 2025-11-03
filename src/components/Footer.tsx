@@ -117,7 +117,7 @@ const Footer = () => {
 
   return (
     <footer className="relative bg-brand-darkest py-16 text-brand-light-muted overflow-hidden">
-      <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-brand-primary-blue to-transparent opacity-30 z-0 pointer-events-none"></div>
+      <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-brand-accent to-transparent opacity-30 z-0 pointer-events-none"></div>
       <div className="container mx-auto px-6 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-y-12 gap-x-8">
           
@@ -187,8 +187,8 @@ const Footer = () => {
           </div>
           
           <div className="md:col-span-3">
-            <div className="relative overflow-hidden bg-brand-dark-secondary/40 border border-brand-primary-blue/50 rounded-2xl p-8 text-center transform hover:scale-105 transition-transform duration-300">
-                <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-brand-accent/40 to-transparent z-0"></div>
+            <div className="relative overflow-hidden bg-brand-dark-secondary/0 border border-brand-accent/30 rounded-2xl p-8 text-center transform hover:scale-105 transition-transform duration-300">
+                <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-brand-accent/20 to-transparent z-0"></div>
                 <div className="relative z-10">
                     <h3 className="font-semibold text-brand-accent text-lg mb-2">Subscribe and Stay In the Loop</h3>
                     <p className="font-light text-sm mb-6">

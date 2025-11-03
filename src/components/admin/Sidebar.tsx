@@ -91,7 +91,7 @@ export default function Sidebar({ counts, profile }: SidebarProps) {
   };
 
   return (
-    <aside className="w-64 flex-shrink-0 flex flex-col bg-gradient-to-b from-brand-darkest from-25% to-brand-primary-blue/20 text-brand-light shadow-lg sticky top-0 h-screen">
+    <aside className="w-64 flex-shrink-0 flex flex-col bg-gradient-to-b from-brand-darkest from-25% to-brand-accent/20 text-brand-light shadow-lg sticky top-0 h-screen">
       <div className="flex flex-1 flex-col overflow-y-auto">
         <div className="flex h-24 items-center justify-center pt-8 pb-8 px-6 border-b border-white/10">
           <Link href="/">

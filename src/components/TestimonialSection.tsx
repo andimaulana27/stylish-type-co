@@ -257,7 +257,7 @@ const TestimonialSection = () => {
   return (
     <section className="bg-brand-dark-secondary py-20 relative overflow-hidden">
         
-        <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-brand-accent to-transparent opacity-45 z-0 pointer-events-none"></div>
+        <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-brand-accent to-transparent opacity-35 z-0 pointer-events-none"></div>
 
         <div className="container mx-auto px-6 relative z-10 text-center">
             <SectionHeader

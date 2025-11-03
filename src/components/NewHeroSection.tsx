@@ -30,7 +30,7 @@ const NewHeroSection = async () => {
 
   return (
     <section className="relative bg-brand-dark-secondary text-brand-light overflow-hidden">
-      <div className="absolute inset-x-0 bottom-0 h-2/4 bg-gradient-to-t from-brand-accent/80 to-transparent opacity-50 z-0"></div>
+      <div className="absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-brand-accent/50 to-transparent opacity-50 z-0"></div>
       <div className="relative z-10">
         <div className="container mx-auto px-8 pt-24 pb-12">
           <div className="flex flex-col items-center text-center max-w-6xl mx-auto">
