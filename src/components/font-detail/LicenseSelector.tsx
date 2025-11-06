@@ -34,7 +34,35 @@ export default function LicenseSelector({ font, licenses }: LicenseSelectorProps
   const filteredLicenses = font.type === 'bundle'
     ? licenses.filter(l => !licensesToExcludeForBundles.includes(l.name.toLowerCase()))
     : licenses;
-  const sortedLicenses = [...filteredLicenses].sort((a, b) => a.name.toLowerCase() === 'standard' ? -1 : b.name.toLowerCase() === 'standard' ? 1 : 0);
+
+  // --- PERUBAHAN UTAMA DI SINI ---
+
+  /**
+   * Helper function untuk mendapatkan harga dasar lisensi
+   * Ini diperlukan untuk pengurutan.
+   */
+  const getLicensePrice = (license: License) => {
+    // Lisensi "Standard" harganya diambil dari produk itu sendiri
+    if (license.name.toLowerCase() === 'standard') {
+      return font.originalPrice ?? font.price;
+    }
+    // Jika produk adalah bundle, gunakan harga bundle dari lisensi
+    if (font.type === 'bundle') {
+      return license.bundle_price || 0;
+    }
+    // Jika tidak, gunakan harga font dari lisensi
+    return license.font_price || 0;
+  };
+
+  // Mengurutkan lisensi berdasarkan harga (termurah ke termahal)
+  const sortedLicenses = [...filteredLicenses].sort((a, b) => {
+    const priceA = getLicensePrice(a);
+    const priceB = getLicensePrice(b);
+    return priceA - priceB;
+  });
+  
+  // --- AKHIR PERUBAHAN ---
+
   const defaultLicense = sortedLicenses.find(l => l.name.toLowerCase() === 'standard') || sortedLicenses[0] || null;
 
   const [selectedLicense, setSelectedLicense] = useState<License | null>(defaultLicense);
