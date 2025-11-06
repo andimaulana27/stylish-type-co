@@ -19,7 +19,12 @@ export default async function MainLayout({
   const { featuredFonts, latestBundles } = await getSuggestionProductsAction();
 
   const cookieStore = cookies();
+  
+  // --- PERBAIKAN DI SINI ---
+  // Nama cookie disesuaikan menjadi 'stylishtype_cookie_consent'
   const consentCookie = cookieStore.get('stylishtype_cookie_consent');
+  // --- AKHIR PERBAIKAN ---
+  
   const hasConsent = consentCookie?.value === 'accepted';
 
   return (

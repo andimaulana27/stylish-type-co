@@ -1,9 +1,11 @@
-// src/actions/cookieActions.ts
+// src/lib/cookieUtils.ts
 'use server';
 
 import { cookies } from 'next/headers';
 
-const CONSENT_COOKIE_NAME = 'timelesstype_cookie_consent';
+// --- PERBAIKAN DI SINI ---
+const CONSENT_COOKIE_NAME = 'stylishtype_cookie_consent';
+// --- AKHIR PERBAIKAN ---
 
 /**
  * Server Action to set the cookie consent.
