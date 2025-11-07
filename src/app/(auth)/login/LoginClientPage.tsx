@@ -192,11 +192,11 @@ export default function LoginClientPage() {
             </div>
           </div>
           
-          <div className={`absolute top-0 left-0 w-full md:w-[calc(50%-1px)] h-full border border-brand-primary-blue rounded-2xl transition-transform duration-700 ease-in-out z-20 overflow-hidden 
+          <div className={`absolute top-0 left-0 w-full md:w-[calc(50%-1px)] h-full border border-brand-accent/50 rounded-2xl transition-transform duration-700 ease-in-out z-20 overflow-hidden 
             ${isRegisterView ? 'translate-x-full' : 'translate-x-0'}`}
           >
             <div className="absolute inset-0 bg-brand-darkest rounded-2xl"></div>
-            <div className="absolute -bottom-1/3 left-1/2 -translate-x-1/2 w-full h-2/3 bg-gradient-radial from-brand-primary-blue/20 to-transparent blur-2xl pointer-events-none"></div>
+            <div className="absolute -bottom-1/3 left-1/2 -translate-x-1/2 w-full h-2/3 bg-gradient-radial from-brand-accent/20 to-transparent blur-2xl pointer-events-none"></div>
             <div className="relative w-full h-full flex items-center justify-center p-12 text-center text-brand-light">
               <div className="relative w-full h-full flex items-center justify-center">
                 <div className={`absolute transition-opacity duration-500 ${isRegisterView ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
