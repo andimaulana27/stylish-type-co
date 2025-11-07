@@ -54,7 +54,7 @@ export default async function PartnersPage() {
 
     return (
         <div className="bg-brand-dark-secondary relative overflow-hidden">
-            <div className="absolute inset-x-0 bottom-0 h-3/4 bg-gradient-to-t from-brand-primary-blue to-transparent opacity-40 z-0"></div>
+            <div className="absolute inset-x-0 bottom-0 h-3/4 bg-gradient-to-t from-brand-accent/50 to-transparent opacity-40 z-0"></div>
 
             <main className="relative z-10">
                 <section className="container mx-auto px-6 pt-24 pb-16 text-center">

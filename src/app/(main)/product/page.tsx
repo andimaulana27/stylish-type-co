@@ -149,7 +149,7 @@ export default async function AllProductsPage({
             </Suspense>
             
             <div className="relative">
-                <div className="absolute inset-x-0 bottom-0 h-full bg-gradient-to-t from-brand-primary-blue to-transparent opacity-30 z-0 pointer-events-none"></div>
+                <div className="absolute inset-x-0 bottom-0 h-full bg-gradient-to-t from-brand-accent/50 to-transparent opacity-30 z-0 pointer-events-none"></div>
                 <div className="relative z-10">
                     <RecommendedSection />
                 </div>

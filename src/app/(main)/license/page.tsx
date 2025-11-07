@@ -29,8 +29,8 @@ export type LicenseDetail = {
 const LicenseCard = ({ license }: { license: LicenseDetail }) => {
   return (
     <div className="bg-brand-darkest border border-brand-accent/50 rounded-lg p-5 h-full flex flex-col relative overflow-hidden group transition-all duration-300 hover:border-brand-primary-blue/50 hover:-translate-y-1">
-      <div className="absolute inset-0 bg-gradient-to-t from-brand-primary-blue/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-0"></div>
-      <div className="absolute inset-0 shadow-lg shadow-brand-primary-blue/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-0"></div>
+      <div className="absolute inset-0 bg-gradient-to-t from-brand-accent/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-0"></div>
+      <div className="absolute inset-0 shadow-lg shadow-brand-accent/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-0"></div>
       <div className="relative z-10 flex flex-col h-full">
         <div>
           <h2 className="text-xl font-semibold text-brand-accent mb-2">{license.title}</h2>
