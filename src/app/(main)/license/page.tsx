@@ -6,7 +6,6 @@ import dynamic from 'next/dynamic';
 import SectionHeader from '@/components/SectionHeader';
 import BackToTopButton from "@/components/BackToTopButton";
 import TrustedBySection from "@/components/TrustedBySection";
-// --- PERUBAHAN DI SINI: Impor yang dibutuhkan untuk mengambil data ---
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { Database } from '@/lib/database.types';
@@ -109,11 +108,11 @@ const LicenseComparisonTable = ({ licenses, features }: {
       <table className="min-w-full w-full border-collapse text-xs text-left">
         <thead>
           <tr>
-            <th className="p-3 font-semibold text-brand-light sticky left-0 bg-gradient-to-t from-brand-primary-blue/20 to-transparent whitespace-nowrap">
+            <th className="p-3 font-semibold text-brand-light sticky left-0 bg-gradient-to-t from-brand-accent/20 to-transparent whitespace-nowrap">
               Usage
             </th>
             {licenses.map(licenseName => (
-              <th key={licenseName} className="p-3 font-semibold text-brand-light whitespace-nowrap text-left bg-gradient-to-t from-brand-primary-blue/20 to-transparent">
+              <th key={licenseName} className="p-3 font-semibold text-brand-light whitespace-nowrap text-left bg-gradient-to-t from-brand-accent/20 to-transparent">
                 {licenseName}
               </th>
             ))}
@@ -150,11 +149,9 @@ async function getLicensePageData() {
     }
 }
 
-// --- PERUBAHAN DI SINI: Mengubah fungsi menjadi async dan mengambil data ---
 export default async function LicensePage() {
   const { licenseDetailsData } = await getLicensePageData();
 
-  // --- PERUBAHAN DI SINI: Mengambil data brands ---
   const cookieStore = cookies();
   const supabase = createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -198,30 +195,39 @@ export default async function LicensePage() {
   
   const licenseGroup1 = allLicenseNames.slice(0, 8);
   const licenseGroup2 = allLicenseNames.slice(8);
+  
+  // --- PERUBAHAN: Menambahkan separatorClasses ---
   const separatorClasses = "border-b border-white/10";
 
   return (
     <div className="bg-brand-dark-secondary">
       <main>
-        <section className="container mx-auto px-6 pt-24 text-center">
-          <SectionHeader
-            title={<>Find the Right License for  <br /> Your Project</>}
-            subtitle="Compare our flexible licensing options to find the perfect fit, whether you're working on a personal project or a large-scale commercial campaign."
-          />
-        </section>
+          <section className="container mx-auto px-6 pt-24 pb-12 text-center">
+            <SectionHeader
+              title={<>Find the Right License for  <br /> Your Project</>}
+              subtitle="Compare our flexible licensing options to find the perfect fit, whether you're working on a personal project or a large-scale commercial campaign."
+            />
+          </section>
         
-        <div className="container mx-auto px-6 pb-12 space-y-16">
-          <LicenseComparisonTable licenses={licenseGroup1} features={allFeatures} />
-          <LicenseComparisonTable licenses={licenseGroup2} features={allFeatures} />
+        {/* --- PERUBAHAN: Membungkus Section 2 --- */}
+        <div className={separatorClasses}>
+          <div className="container mx-auto px-6 py-16 space-y-16">
+            <LicenseComparisonTable licenses={licenseGroup1} features={allFeatures} />
+            <LicenseComparisonTable licenses={licenseGroup2} features={allFeatures} />
+          </div>
         </div>
 
-        <LicenseCardGrid licenses={licenseDetailsData} />
+        {/* --- PERUBAHAN: Membungkus Section 3 --- */}
+        <div className={separatorClasses}>
+          <LicenseCardGrid licenses={licenseDetailsData} />
+        </div>
         
+        {/* --- PERUBAHAN: Membungkus Section 4 --- */}
         <div className={separatorClasses}>
             <TestimonialSection />
         </div>
 
-        {/* --- PERUBAHAN DI SINI: Memberikan prop 'brands' --- */}
+        {/* --- PERUBAHAN: Section 5 (Terakhir) TIDAK dibungkus --- */}
         <TrustedBySection brands={brands || []} />
         <BackToTopButton />
       </main>

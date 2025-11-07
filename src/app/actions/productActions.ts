@@ -162,7 +162,7 @@ export async function addFontAction(formData: FormData) {
   }
 
   revalidatePath('/admin/products/fonts');
-  revalidatePath('/fonts');
+  revalidatePath('/product');
   redirect('/admin/products/fonts');
 }
 
@@ -628,7 +628,7 @@ export async function updateFontAction(fontId: string, formData: FormData) {
   }
 
   revalidatePath('/admin/products/fonts');
-  revalidatePath(`/fonts/${slug}`);
+  revalidatePath(`/product/${slug}`);
   revalidatePath(`/admin/products/fonts/${fontId}/edit`);
   // Tidak perlu redirect di sini, biarkan UI client yang menangani
 }
@@ -702,7 +702,7 @@ export async function deleteFontAction(fontId: string) {
     }
 
     revalidatePath('/admin/products/fonts');
-    revalidatePath('/fonts');
+    revalidatePath('/product');
     return { success: 'Font deleted successfully!' };
 }
 
@@ -776,7 +776,7 @@ export async function bulkDeleteFontsAction(fontIds: string[]) {
   }
 
   revalidatePath('/admin/products/fonts');
-  revalidatePath('/fonts'); // Revalidate halaman publik juga
+  revalidatePath('/product'); // Revalidate halaman publik juga
 
   if (errors.length > 0) {
     return { error: `Bulk delete partially failed. ${deletedCount} deleted. Errors: ${errors.join(', ')}` };
@@ -866,7 +866,7 @@ export async function bulkApplyDiscountToAllFontsAction(discountId: string | nul
         return { error: 'An unexpected error occurred during bulk discount update for all fonts.' };
     }
     revalidatePath('/admin/products/fonts');
-    revalidatePath('/fonts');
+    revalidatePath('/product');
     return { success: 'Discount successfully applied to all fonts!' };
 }
 

@@ -69,15 +69,23 @@ export default function SubscriptionClientPage({ plans }: { plans: Plan[] }) {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-        {plans.map((plan) => (
-          <SubscriptionCard 
-            key={plan.id} 
-            plan={plan} 
-            billingCycle={billingCycle}
-            activeSubscription={activeSubscription}
-            onDowngradeClick={handleDowngradeClick} // Teruskan handler ke card
-          />
-        ))}
+        {plans.map((plan) => {
+          // --- PERUBAHAN UTAMA: Tambahkan logika untuk 'isRecommended' ---
+          // Kita akan tandai plan yang namanya mengandung "Gold" sebagai recommended
+          const isRecommended = plan.name.toLowerCase().includes('gold');
+          // --- AKHIR PERUBAHAN ---
+
+          return (
+            <SubscriptionCard 
+              key={plan.id} 
+              plan={plan} 
+              billingCycle={billingCycle}
+              activeSubscription={activeSubscription}
+              onDowngradeClick={handleDowngradeClick} 
+              isRecommended={isRecommended} // <-- 4. Teruskan prop di sini
+            />
+          );
+        })}
       </div>
     </>
   );

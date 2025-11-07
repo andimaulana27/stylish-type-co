@@ -5,9 +5,9 @@ import Button from './Button';
 const InfoActionSection = () => {
   return (
     // --- PERUBAHAN UTAMA: Menambahkan background, border, dan padding ---
-    <div className="relative overflow-hidden bg-brand-darkest border border-brand-primary-blue/50 rounded-2xl p-12">
+    <div className="relative overflow-hidden bg-brand-darkest border border-brand-accent/50 rounded-2xl p-12">
       {/* Elemen untuk efek gradien biru */}
-      <div className="absolute inset-0 bg-gradient-to-t from-brand-primary-blue/70 to-transparent opacity-50 z-0"></div>
+      <div className="absolute inset-0 bg-gradient-to-t from-brand-accent/70 to-transparent opacity-50 z-0"></div>
       
       <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
         {/* Kolom Kiri: How to Use */}

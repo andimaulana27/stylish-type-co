@@ -201,7 +201,7 @@ export default function LicenseSelector({ font, licenses }: LicenseSelectorProps
     }
     
     const activeClasses = isActive 
-      ? 'bg-gradient-to-t from-brand-primary-blue/20 to-transparent border-brand-primary-blue' 
+      ? 'bg-gradient-to-t from-brand-accent/20 to-transparent border-brand-accent' 
       : 'border-brand-accent/50 hover:bg-brand-accent/5';
 
     return (

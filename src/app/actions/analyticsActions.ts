@@ -32,8 +32,12 @@ const processMultiDimensionReport = (response: AnalyticsReportTuple) => {
     }));
 };
 
-// --- PERUBAHAN DI SINI: Mengubah parameter dari periodInDays menjadi startDate dan endDate ---
-export async function getAnalyticsDataAction(startDate: string, endDate: string) {
+// --- PERUBAHAN DI SINI: Menambahkan parameter 'limit' ---
+export async function getAnalyticsDataAction(
+    startDate: string, 
+    endDate: string,
+    limit: number = 10 // Menambahkan limit dengan nilai default
+) {
     if (!propertyId || !process.env.GA_CLIENT_EMAIL || !process.env.GA_PRIVATE_KEY) {
         return { error: 'Konfigurasi Google Analytics API tidak lengkap di file .env.local.' };
     }
@@ -67,16 +71,16 @@ export async function getAnalyticsDataAction(startDate: string, endDate: string)
                     } 
                 }]
             }),
-            // Query untuk halaman teratas
-            analyticsDataClient.runReport({ property: `properties/${propertyId}`, dateRanges: [{ startDate, endDate }], dimensions: [{ name: 'pagePath' }], metrics: [{ name: 'activeUsers' }], limit: 7, orderBys: [{ metric: { metricName: 'activeUsers' }, desc: true }] }),
-            // Query untuk sumber traffic teratas
-            analyticsDataClient.runReport({ property: `properties/${propertyId}`, dateRanges: [{ startDate, endDate }], dimensions: [{ name: 'sessionSource' }], metrics: [{ name: 'activeUsers' }], limit: 7, orderBys: [{ metric: { metricName: 'activeUsers' }, desc: true }] }),
-            // Query untuk negara teratas
-            analyticsDataClient.runReport({ property: `properties/${propertyId}`, dateRanges: [{ startDate, endDate }], dimensions: [{ name: 'country' }], metrics: [{ name: 'activeUsers' }], limit: 5, orderBys: [{ metric: { metricName: 'activeUsers' }, desc: true }] }),
-            // Query untuk perangkat
+            // --- PERUBAHAN DI SINI: Menggunakan 'limit' ---
+            analyticsDataClient.runReport({ property: `properties/${propertyId}`, dateRanges: [{ startDate, endDate }], dimensions: [{ name: 'pagePath' }], metrics: [{ name: 'activeUsers' }], limit: limit, orderBys: [{ metric: { metricName: 'activeUsers' }, desc: true }] }),
+            // --- PERUBAHAN DI SINI: Menggunakan 'limit' ---
+            analyticsDataClient.runReport({ property: `properties/${propertyId}`, dateRanges: [{ startDate, endDate }], dimensions: [{ name: 'sessionSource' }], metrics: [{ name: 'activeUsers' }], limit: limit, orderBys: [{ metric: { metricName: 'activeUsers' }, desc: true }] }),
+            // --- PERUBAHAN DI SINI: Menggunakan 'limit' ---
+            analyticsDataClient.runReport({ property: `properties/${propertyId}`, dateRanges: [{ startDate, endDate }], dimensions: [{ name: 'country' }], metrics: [{ name: 'activeUsers' }], limit: limit, orderBys: [{ metric: { metricName: 'activeUsers' }, desc: true }] }),
+            // Query untuk perangkat (Daftar ini tetap, tidak perlu limit)
             analyticsDataClient.runReport({ property: `properties/${propertyId}`, dateRanges: [{ startDate, endDate }], dimensions: [{ name: 'deviceCategory' }], metrics: [{ name: 'activeUsers' }], orderBys: [{ metric: { metricName: 'activeUsers' }, desc: true }] }),
-            // Query untuk sistem operasi
-            analyticsDataClient.runReport({ property: `properties/${propertyId}`, dateRanges: [{ startDate, endDate }], dimensions: [{ name: 'operatingSystem' }], metrics: [{ name: 'activeUsers' }], limit: 5, orderBys: [{ metric: { metricName: 'activeUsers' }, desc: true }] }),
+            // --- PERUBAHAN DI SINI: Menggunakan 'limit' ---
+            analyticsDataClient.runReport({ property: `properties/${propertyId}`, dateRanges: [{ startDate, endDate }], dimensions: [{ name: 'operatingSystem' }], metrics: [{ name: 'activeUsers' }], limit: limit, orderBys: [{ metric: { metricName: 'activeUsers' }, desc: true }] }),
         ]);
 
         const statsRow = statsResponse[0]?.rows?.[0];

@@ -1,5 +1,5 @@
 // src/components/subscription/SubscriptionCard.tsx
-import { CheckCircle2, XCircle, Gem } from 'lucide-react';
+import { CheckCircle2, XCircle, Gem, Star } from 'lucide-react';
 import Button from '@/components/Button';
 import { type Tables } from '@/lib/database.types';
 
@@ -12,14 +12,21 @@ type SubscriptionCardProps = {
   plan: Plan;
   billingCycle: 'monthly' | 'yearly';
   activeSubscription: UserSubscription | null;
-  onDowngradeClick: (plan: Plan) => void; // Properti baru untuk handle klik downgrade
+  onDowngradeClick: (plan: Plan) => void;
+  isRecommended?: boolean;
 };
 
-const SubscriptionCard = ({ plan, billingCycle, activeSubscription, onDowngradeClick }: SubscriptionCardProps) => {
+const SubscriptionCard = ({ 
+  plan, 
+  billingCycle, 
+  activeSubscription, 
+  onDowngradeClick, 
+  isRecommended = false 
+}: SubscriptionCardProps) => {
+  
   const isSubscribed = !!activeSubscription;
   const isCurrentPlan = isSubscribed && activeSubscription.subscription_plans?.name === plan.name;
   
-  // Memeriksa apakah ini upgrade/downgrade berdasarkan harga bulanan
   const currentPlanPriceMonthly = (activeSubscription?.subscription_plans as Plan)?.price_monthly ?? -1;
   const isUpgrade = isSubscribed && plan.price_monthly > currentPlanPriceMonthly;
   const isDowngrade = isSubscribed && plan.price_monthly < currentPlanPriceMonthly;
@@ -41,14 +48,20 @@ const SubscriptionCard = ({ plan, billingCycle, activeSubscription, onDowngradeC
   } else if (isDowngrade) {
     buttonText = "Downgrade Plan";
     buttonVariant = 'outline';
-    actionHandler = () => onDowngradeClick(plan); // Atur action handler untuk downgrade
+    actionHandler = () => onDowngradeClick(plan);
   }
   
+  // --- PERUBAHAN UTAMA STYLING KARTU ---
+  // Default: border-brand-primary-blue, shadow-brand-primary-blue
+  // Hover: hover:border-brand-accent
   const cardClasses = `bg-brand-darkest border rounded-lg p-8 md:p-12 h-full flex flex-col 
                        relative overflow-hidden group transition-all duration-300 
-                       ${isCurrentPlan 
-                         ? 'border-brand-secondary-green shadow-lg shadow-brand-secondary-green/20' 
-                         : 'border-brand-accent/50 hover:border-brand-primary-blue/50 hover:-translate-y-1'}`;
+                       ${isRecommended && !isCurrentPlan 
+                         ? 'border-brand-primary-blue shadow-2xl shadow-brand-primary-blue/30 transform-gpu lg:-translate-y-4 hover:border-brand-accent' // Style menonjol (BARU)
+                         : isCurrentPlan 
+                         ? 'border-brand-secondary-green shadow-lg shadow-brand-secondary-green/20' // Style plan aktif
+                         : 'border-brand-accent/50 hover:border-brand-primary-blue/50 hover:-translate-y-1'}`; // Style default
+  // --- AKHIR PERUBAHAN ---
 
   const currentPrice = billingCycle === 'yearly' ? plan.price_yearly / 12 : plan.price_monthly;
   const pricePeriod = '/month';
@@ -65,14 +78,44 @@ const SubscriptionCard = ({ plan, billingCycle, activeSubscription, onDowngradeC
 
   return (
     <div className={cardClasses}>
+      
+      {isRecommended && !isCurrentPlan && (
+        <div className="absolute top-4 right-4 flex items-center gap-2 bg-brand-accent text-brand-darkest text-xs font-semibold px-3 py-1 rounded-full z-20">
+          <Star size={14}/>
+          <span>Recommended</span>
+        </div>
+      )}
+
       {isCurrentPlan && (
-        <div className="absolute top-4 right-4 flex items-center gap-2 bg-brand-secondary-green/20 text-brand-secondary-green text-xs font-semibold px-3 py-1 rounded-full">
+        <div className="absolute top-4 right-4 flex items-center gap-2 bg-brand-secondary-green/20 text-brand-secondary-green text-xs font-semibold px-3 py-1 rounded-full z-20">
           <Gem size={14}/>
           <span>Active</span>
         </div>
       )}
-      <div className="absolute inset-0 bg-gradient-to-t from-brand-primary-blue/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-0"></div>
-      <div className="absolute inset-0 shadow-lg shadow-brand-primary-blue/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-0"></div>
+
+      {/* --- PERUBAHAN LOGIKA GRADIEN --- */}
+
+      {/* Gradien Biru (Default untuk Recommended) - Hilang saat hover */}
+      {isRecommended && !isCurrentPlan && (
+        <div className="absolute inset-0 bg-gradient-to-t from-brand-primary-blue/30 to-transparent opacity-100 group-hover:opacity-0 transition-opacity duration-300 pointer-events-none z-0"></div>
+      )}
+
+      {/* Gradien Oranye (Hover untuk Recommended) - Muncul saat hover */}
+      {isRecommended && !isCurrentPlan && (
+        <div className="absolute inset-0 bg-gradient-to-t from-brand-accent/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-0"></div>
+      )}
+
+      {/* Gradien Biru (Hover untuk Non-Recommended) - Muncul saat hover */}
+      {!isRecommended && (
+        <div className="absolute inset-0 bg-gradient-to-t from-brand-primary-blue/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-0"></div>
+      )}
+      
+      {/* Efek Shadow untuk SEMUA hover (kecuali plan aktif) */}
+      {!isCurrentPlan && (
+          <div className="absolute inset-0 shadow-lg shadow-brand-primary-blue/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-0"></div>
+      )}
+      {/* --- AKHIR PERUBAHAN LOGIKA GRADIEN --- */}
+
 
       <div className="relative z-10 flex flex-col h-full">
         <div className="mb-10 text-left">

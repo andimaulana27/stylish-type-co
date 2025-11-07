@@ -2,14 +2,20 @@
 'use client';
 
 import { getAnalyticsDataAction } from '@/app/actions/analyticsActions';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Fragment } from 'react';
 import { DateRange } from 'react-day-picker';
 import { addDays, format, startOfMonth, endOfMonth, subMonths, startOfYear, endOfYear, subYears } from 'date-fns';
 import toast from 'react-hot-toast';
 
+// --- PERUBAHAN 1: Impor komponen baru ---
 import DashboardHeader from '@/components/admin/dashboard/DashboardHeader';
-import { Loader2, FileText, Smartphone, Globe, Link as LinkIcon } from 'lucide-react';
+import DatePickerSelector from '@/components/admin/dashboard/DatePickerSelector';
+// --- AKHIR PERUBAHAN ---
+
+import { Loader2, FileText, Smartphone, Globe, Link as LinkIcon, ChevronDown, Check, BarChart as BarChartIcon } from 'lucide-react';
 import { BarChart, Bar, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+import { Menu, Transition } from '@headlessui/react';
+
 
 type AnalyticsData = Awaited<ReturnType<typeof getAnalyticsDataAction>>;
 type ColorPalette = { icon: string; progress: string; text: string; };
@@ -38,12 +44,12 @@ const AnalyticsDataTable = ({ title, data, color, icon: Icon }: {
 }) => {
     const totalValue = data.reduce((sum, item) => sum + item.value, 0);
     return (
-        <div className="bg-brand-darkest p-4 rounded-lg border border-white/10 h-full">
-            <h3 className={`font-semibold text-brand-light mb-4 flex items-center gap-2 ${color.text}`}>
+        <div className="bg-brand-darkest p-4 rounded-lg border border-white/10 h-96 flex flex-col">
+            <h3 className={`font-semibold text-brand-light mb-4 flex items-center gap-2 ${color.text} flex-shrink-0`}>
                 <Icon size={18} />
                 {title}
             </h3>
-            <div className="space-y-3 text-sm">
+            <div className="space-y-3 text-sm overflow-y-auto pr-2 flex-grow min-h-0">
                 {data.map((item, index) => (
                     <div key={index}>
                         <div className="flex justify-between mb-1 items-center">
@@ -81,17 +87,88 @@ const getDynamicPeriodLabel = (preset: string, range: DateRange | undefined): st
     return presets[preset] || 'Selected Period';
 };
 
+const limitOptions = [
+    { key: 10, label: 'Top 10' },
+    { key: 30, label: 'Top 30' },
+    { key: 50, label: 'Top 50' },
+    { key: 100, label: 'Top 100' },
+];
+
+const LimitSelector = ({ limit, setLimit, isLoading }: {
+    limit: number,
+    setLimit: (limit: number) => void,
+    isLoading: boolean
+}) => {
+    return (
+        <Menu as="div" className="relative inline-block text-left z-30">
+            {({ open }) => (
+            <>
+                <div>
+                <Menu.Button 
+                    className="inline-flex w-40 justify-center items-center gap-x-2 rounded-lg bg-brand-darkest border border-white/10 px-5 py-2.5 text-base font-medium text-brand-light shadow-sm hover:border-brand-accent transition-colors duration-200 group"
+                >
+                    <BarChartIcon size={18} className="text-brand-light-muted group-hover:text-brand-accent transition-colors duration-200" />
+                    <span className="group-hover:text-brand-accent transition-colors duration-200 flex-grow text-left truncate">
+                        Top {limit}
+                    </span>
+                    {isLoading ? (
+                        <Loader2 size={18} className="animate-spin" />
+                    ) : (
+                        <ChevronDown 
+                        className={`h-5 w-5 text-brand-light-muted group-hover:text-brand-accent transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+                        aria-hidden="true" 
+                        />
+                    )}
+                </Menu.Button>
+                </div>
+
+                <Transition
+                as={Fragment}
+                enter="transition ease-out duration-100"
+                enterFrom="transform opacity-0 scale-95"
+                enterTo="transform opacity-100 scale-100"
+                leave="transition ease-in duration-75"
+                leaveFrom="transform opacity-100 scale-100"
+                leaveTo="transform opacity-0 scale-95"
+                >
+                <Menu.Items className="absolute right-0 mt-2 w-40 origin-top-right rounded-md bg-[#1e1e1e] shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                    <div className="py-1">
+                    {limitOptions.map((option) => (
+                        <Menu.Item key={option.key}>
+                        {({ active }) => (
+                            <button
+                                onClick={() => setLimit(option.key)}
+                                className={`w-full text-left px-4 py-2 text-sm flex items-center gap-3 transition-colors duration-150 ${active ? 'bg-brand-accent text-brand-darkest' : limit === option.key ? 'text-brand-accent' : 'text-brand-light'}`}
+                            >
+                                <div className="w-5 flex-shrink-0">
+                                {limit === option.key && <Check size={16} className={active ? 'text-brand-darkest' : 'text-brand-accent'} />}
+                                </div>
+                                <span>{option.label}</span>
+                            </button>
+                        )}
+                        </Menu.Item>
+                    ))}
+                    </div>
+                </Menu.Items>
+                </Transition>
+            </>
+            )}
+        </Menu>
+    );
+};
+
+
 export default function AnalyticsPage() {
     const [analyticsData, setAnalyticsData] = useState<AnalyticsData['data'] | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
 
-    // --- PERUBAHAN: Menambahkan state untuk date picker ---
     const [selectedPreset, setSelectedPreset] = useState('last7days');
     const [dateRange, setDateRange] = useState<DateRange | undefined>({
         from: addDays(new Date(), -6),
         to: new Date(),
     });
+    const [limit, setLimit] = useState<number>(10);
 
     // Efek untuk mengubah rentang tanggal berdasarkan preset
     useEffect(() => {
@@ -113,14 +190,14 @@ export default function AnalyticsPage() {
         setDateRange({ from: fromDate, to: toDate });
     }, [selectedPreset]);
 
-    // Efek untuk mengambil data saat rentang tanggal berubah
+    // Efek untuk mengambil data saat rentang tanggal atau limit berubah
     useEffect(() => {
         if (dateRange?.from && dateRange?.to) {
             setLoading(true);
             const fromISO = format(dateRange.from, 'yyyy-MM-dd');
             const toISO = format(dateRange.to, 'yyyy-MM-dd');
 
-            getAnalyticsDataAction(fromISO, toISO).then(result => {
+            getAnalyticsDataAction(fromISO, toISO, limit).then(result => {
                 if (result.error) {
                     setError(result.error);
                     toast.error(result.error);
@@ -131,33 +208,40 @@ export default function AnalyticsPage() {
                 setLoading(false);
             });
         }
-    }, [dateRange]);
-    // --- AKHIR PERUBAHAN ---
-
-    if (error && !loading) {
-        return (
-            <div className="bg-red-500/10 border border-red-500/30 text-red-300 p-6 rounded-lg">
-                <h2 className="font-bold">Gagal Memuat Data Analitik</h2>
-                <p className="text-sm mt-2">{error}</p>
-            </div>
-        );
-    }
+    }, [dateRange, limit]);
     
     const displayLabel = getDynamicPeriodLabel(selectedPreset, dateRange);
     const { stats, chartData, topPages, topReferrers, topCountries, topDevices, topOS } = analyticsData || {};
 
     return (
         <div className="space-y-6">
-            <DashboardHeader
-                title="Traffic Analytics"
-                subtitle={`Ringkasan traffic website Anda untuk ${displayLabel.toLowerCase()}.`}
-                selectedPreset={selectedPreset}
-                setSelectedPreset={setSelectedPreset}
-                dateRange={dateRange}
-                setDateRange={setDateRange}
-                isLoading={loading}
-                displayLabel={displayLabel}
-            />
+            
+            {/* --- PERUBAHAN UTAMA: Tata letak header diubah --- */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                {/* 1. Header (hanya title/subtitle) */}
+                <DashboardHeader
+                    title="Traffic Analytics"
+                    subtitle={`Ringkasan traffic website Anda untuk ${displayLabel.toLowerCase()}.`}
+                />
+                
+                {/* 2. Grup untuk kedua picker */}
+                <div className="flex flex-col sm:flex-row gap-4">
+                    <LimitSelector 
+                        limit={limit}
+                        setLimit={setLimit}
+                        isLoading={loading}
+                    />
+                    <DatePickerSelector
+                        selectedPreset={selectedPreset}
+                        setSelectedPreset={setSelectedPreset}
+                        dateRange={dateRange}
+                        setDateRange={setDateRange}
+                        isLoading={loading}
+                        displayLabel={displayLabel}
+                    />
+                </div>
+            </div>
+            {/* --- AKHIR PERUBAHAN --- */}
             
             {loading ? (
                 <div className="flex items-center justify-center h-64">

@@ -34,13 +34,13 @@ const SubscriptionComparisonTable = ({ plans, features }: SubscriptionComparison
       <table className="min-w-full w-full border-collapse text-base text-left">
         <thead>
           <tr>
-            <th className="px-6 py-4 font-semibold text-brand-light sticky left-0 bg-gradient-to-t from-brand-primary-blue/20 to-transparent whitespace-nowrap">
+            <th className="px-6 py-4 font-semibold text-brand-light sticky left-0 bg-gradient-to-t from-brand-accent/20 to-transparent whitespace-nowrap">
               Features
             </th>
             {plans.map(planName => (
               <th 
                 key={planName} 
-                className="px-6 py-4 font-semibold text-brand-light whitespace-nowrap text-center bg-gradient-to-t from-brand-primary-blue/20 to-transparent"
+                className="px-6 py-4 font-semibold text-brand-light whitespace-nowrap text-center bg-gradient-to-t from-brand-accent/20 to-transparent"
               >
                 {planName}
               </th>

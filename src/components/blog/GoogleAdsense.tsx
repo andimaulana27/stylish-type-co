@@ -9,13 +9,15 @@ type GoogleAdsenseProps = {
   className?: string;
   format?: 'auto' | 'fluid';
   responsive?: string;
+  style?: React.CSSProperties; // <-- PERUBAHAN DI SINI: Tambahkan prop style
 };
 
 const GoogleAdsense = ({ 
     slot, 
     className = 'adsbygoogle', 
     format = 'auto', 
-    responsive = 'true' 
+    responsive = 'true',
+    style = {} // <-- PERUBAHAN DI SINI: Beri nilai default
 }: GoogleAdsenseProps) => {
     
     const pathname = usePathname();
@@ -43,12 +45,15 @@ const GoogleAdsense = ({
     return (
         <ins
             className={className}
-            // --- PERBAIKAN UTAMA DI SINI ---
-            // 1. display: 'block' diperlukan agar margin auto berfungsi
-            // 2. margin: '0 auto' akan memusatkan slot iklan secara horizontal
-            // 3. textAlign: 'center' untuk memastikan konten di dalamnya juga center
-            style={{ display: 'block', margin: '0 auto', textAlign: 'center' }}
-            // --- AKHIR PERBAIKAN ---
+            // --- PERUBAHAN UTAMA DI SINI ---
+            // Menggabungkan style default dengan style dari prop
+            style={{ 
+                display: 'block', 
+                margin: '0 auto', 
+                textAlign: 'center',
+                ...style // <-- Terapkan style kustom di sini
+            }}
+            // --- AKHIR PERUBAHAN ---
             data-ad-slot={slot}
             data-ad-format={format}
             data-full-width-responsive={responsive}

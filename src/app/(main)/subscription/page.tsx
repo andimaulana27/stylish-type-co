@@ -11,6 +11,7 @@ import { Metadata } from 'next';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { Database } from '@/lib/database.types';
+// --- Impor Komponen Banner Baru ---
 import SubscriptionPromoBanner from '@/components/subscription/SubscriptionPromoBanner';
 
 export const revalidate = 0;
@@ -73,25 +74,29 @@ export default async function SubscriptionPage() {
   return (
     <div className="bg-brand-dark-secondary">
       <main>
-        <section className="container mx-auto px-6 pt-24 pb-12">
-          <SectionHeader
-            align="center"
-            title="Creative Freedom Starts Here"
-            subtitle="Access our entire library of premium fonts for one simple price, fueling your creative freedom."
-          />
-          <SubscriptionPromoBanner />
-          
-          <SubscriptionClientPage plans={plans} />
-        </section>
-
-        <section className="container mx-auto px-6 py-16">
+        <div className={separatorClasses}>
+          {/* --- PERUBAHAN DI SINI: pb-12 diubah menjadi pb-16 --- */}
+          <section className="container mx-auto px-6 pt-24 pb-16">
             <SectionHeader
-                align="center"
-                title="Compare All Plans"
-                subtitle="A detailed look at the features included in each subscription tier."
+              align="center"
+              title="Creative Freedom Starts Here"
+              subtitle="Access our entire library of premium fonts for one simple price, fueling your creative freedom."
             />
-            <SubscriptionComparisonTable plans={planNames} features={comparisonTableData} />
-        </section>
+            <SubscriptionPromoBanner />
+            <SubscriptionClientPage plans={plans} />
+          </section>
+        </div>
+
+        <div className={separatorClasses}>
+          <section className="container mx-auto px-6 py-16">
+              <SectionHeader
+                  align="center"
+                  title="Compare All Plans"
+                  subtitle="A detailed look at the features included in each subscription tier."
+              />
+              <SubscriptionComparisonTable plans={planNames} features={comparisonTableData} />
+          </section>
+        </div>
 
         <div className={separatorClasses}>
             <Suspense fallback={<SectionSkeleton />}>
@@ -103,7 +108,7 @@ export default async function SubscriptionPage() {
             <SectionHeader
                 align="center"
                 title="Frequently Asked Questions"
-                subtitle="Have questions? We've got answers. If you can't find what you're for, feel free to contact us."
+                subtitle="Have questions? We've got answers. If you can't find what you're looking for, feel free to contact us."
             />
             
             <FaqSection />

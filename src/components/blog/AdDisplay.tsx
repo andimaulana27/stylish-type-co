@@ -29,8 +29,6 @@ const AdDisplay = ({ config, className = '', fallback = null }: AdDisplayProps) 
 
   if (config.ad_type === 'banner' && config.banner_image_url) {
     return (
-      // --- PERBAIKAN UNTUK BANNER ---
-      // Kita hapus 'className' dari wrapper dan tambahkan style centering
       <div className="w-full flex justify-center items-center">
         <Link href="/contact?subject=Ad Inquiry" target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block' }}>
           <Image 
@@ -49,23 +47,23 @@ const AdDisplay = ({ config, className = '', fallback = null }: AdDisplayProps) 
     const { slot } = extractAdsenseData(config.google_script);
     
     if (slot) {
+        // --- PERUBAHAN UTAMA DI SINI ---
         const isVerticalAd = config.position === 'left' || config.position === 'right';
+        
+        // Tentukan style kustom. Jika ini iklan vertikal, atur min-height.
+        // 400px adalah nilai yang baik untuk "meminta" iklan tinggi seperti 300x600.
+        const adStyle = isVerticalAd ? { minHeight: '400px' } : {};
+        // --- AKHIR PERUBAHAN ---
 
-        // --- PERUBAIKAN UTAMA DI SINI ---
-        // Hapus 'div' wrapper yang memiliki background hitam.
-        // Render 'GoogleAdsense' secara langsung.
-        // Komponen 'GoogleAdsense' (dari langkah 1) sekarang akan mengurus centering-nya sendiri.
         return (
             <GoogleAdsense 
               slot={slot} 
-              // 'auto' adalah format responsif modern yang lebih baik daripada 'fluid'
               format={'auto'}
-              // Kita tetap teruskan 'className' jika ada, tapi style centering akan di-handle
-              // oleh 'GoogleAdsense.tsx'
+              // Terapkan style kustom ke komponen GoogleAdsense
+              style={adStyle}
               className={`${isVerticalAd ? 'adsbygoogle adsbygoogle-vertical' : 'adsbygoogle'} ${className}`}
             />
         );
-        // --- AKHIR PERUBAIKAN ---
     }
     return <>{fallback}</>;
   }

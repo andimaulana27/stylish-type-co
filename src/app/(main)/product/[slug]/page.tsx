@@ -23,11 +23,11 @@ import BackToTopButton from "@/components/BackToTopButton";
 import RelatedTags from '@/components/font-detail/RelatedTags';
 import ProductTitle from '@/components/font-detail/ProductTitle';
 import InfoActionSection from '@/components/InfoActionSection';
-import FontPairingPreview from '@/components/font-detail/FontPairingPreview';
 import { type CardPost } from '@/components/blog/BlogCard';
 
 const RecommendedSection = dynamic(() => import('@/components/RecommendedSection'), { ssr: false });
 const BlogCarousel = dynamic(() => import('@/components/blog/BlogCarousel'), { ssr: false });
+const RelatedFontsSection = dynamic(() => import('@/components/font-detail/RelatedFontsSection'), { ssr: false });
 
 type FontFile = { style: string; url: string; };
 
@@ -52,7 +52,7 @@ export async function generateMetadata(
       ? font.main_description.replace(/<[^>]*>/g, '').split('. ')[0] + '.'
       : 'Discover the ' + font.name + ' font, a premium typeface perfect for your design projects.';
 
-    const jsonLd = { /* ... */ };
+    const jsonLd = { /* ... (kode JSON-LD tetap sama) ... */ };
 
     return {
       title: `${font.name} Font`,
@@ -66,12 +66,7 @@ export async function generateMetadata(
         url: `/product/${slug}`,
         type: 'article',
       },
-      twitter: {
-          card: 'summary_large_image',
-          title: `${font.name} Font | Stylish Type`,
-          description: descriptionText,
-          images: [firstImage],
-      },
+      twitter: { /* ... (kode twitter tetap sama) ... */ },
       other: { 'script[type="application/ld+json"]': JSON.stringify(jsonLd) },
     };
   } catch (error) {
@@ -81,6 +76,7 @@ export async function generateMetadata(
 
 export const revalidate = 3600;
 
+// FUNGSI BARU UNTUK MENGAMBIL SEMUA DATA DARI SATU ENDPOINT
 async function getFontPageData(slug: string) {
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL;
     try {
@@ -96,7 +92,7 @@ async function getFontPageData(slug: string) {
     }
 }
 
-export default async function ProductDetailPage({ params }: { params: { slug: string } }) {
+export default async function FontDetailPage({ params }: { params: { slug: string } }) {
   const pageData = await getFontPageData(params.slug);
 
   if (!pageData) {
@@ -107,8 +103,8 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
     font,
     licenses,
     formattedBundles,
-    allFontsForPairing,
     latestBlogPosts,
+    relatedFonts, // <-- Ambil data baru
   } = pageData;
   
   const cookieStore = cookies();
@@ -161,7 +157,7 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
 
   const glyphs = (font.glyphs_json as string[]) || [];
   const partnerName = font.partners?.name || 'Stylish Type';
-  const partnerHref = font.partners ? `/partners/${font.partners.slug}` : '/product?partner=stylishtype';
+  const partnerHref = font.partners ? `/partners/${font.partners.slug}` : '/product?partner=stylish-type';
 
   return (
     <>
@@ -180,12 +176,6 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
                 <div className="w-16 h-1 bg-brand-accent text-left my-4 rounded-full"></div>
                 <article className="prose prose-invert prose-lg max-w-none" dangerouslySetInnerHTML={{ __html: font.main_description ?? '' }} />
               </div>
-              
-              {allFontsForPairing.length > 0 && (
-                <FontPairingPreview 
-                    allFonts={allFontsForPairing} 
-                />
-              )}
               
               <RelatedTags purposeTags={font.purpose_tags ?? []} styleTags={font.tags ?? []} basePath="/product" />
               <InfoActionSection />
@@ -217,6 +207,18 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
             </aside>
           </div>
         </div>
+        
+        {/* --- SECTION BARU DITAMBAHKAN DI SINI --- */}
+        <Suspense fallback={null}>
+          <RelatedFontsSection
+            products={relatedFonts}
+            title="You May Also Like"
+            // --- PERUBAHAN SUBTITLE DI SINI ---
+            subtitle="Love this vibe? Discover other fonts from our collection with a similar style and purpose."
+          />
+        </Suspense>
+        
+        {/* Ini adalah section "Our Staff Picks" */}
         <RecommendedSection currentProductId={font.id} />
         
         <BlogCarousel

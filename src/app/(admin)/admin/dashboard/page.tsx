@@ -17,6 +17,9 @@ import SalesRevenueSummary from '@/components/admin/dashboard/SalesRevenueSummar
 import RecentOrdersTable from '@/components/admin/dashboard/RecentOrdersTable';
 import { Users, Gem, FileText, Package, Type, DollarSign, ShoppingCart } from 'lucide-react';
 
+// --- PERUBAHAN 1: Impor komponen DatePickerSelector baru ---
+import DatePickerSelector from '@/components/admin/dashboard/DatePickerSelector';
+
 type AnalyticsData = Awaited<ReturnType<typeof getDashboardAnalyticsAction>>;
 
 const presets: { [key: string]: string } = {
@@ -95,21 +98,26 @@ export default function AdminDashboardPage() {
 
     return (
         <div className="space-y-8">
-            {/* --- PERBAIKAN DI SINI: Menambahkan props `title` dan `subtitle` --- */}
-            <DashboardHeader 
-                title={<>
-                    <span className="text-brand-light">Admin</span>
-                    <span className="text-brand-accent"> Dashboard</span>
-                </>}
-                subtitle="Welcome back! Here's your analytics overview."
-                selectedPreset={selectedPreset}
-                setSelectedPreset={setSelectedPreset}
-                dateRange={dateRange}
-                setDateRange={setDateRange}
-                isLoading={isFetching}
-                displayLabel={dynamicLabel}
-            />
-            {/* --- AKHIR PERBAIKAN --- */}
+            
+            {/* --- PERUBAHAN 2: Ganti wrapper dan tambahkan DatePickerSelector --- */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <DashboardHeader 
+                    title={<>
+                        <span className="text-brand-light">Admin</span>
+                        <span className="text-brand-accent"> Dashboard</span>
+                    </>}
+                    subtitle="Welcome back! Here's your analytics overview."
+                />
+                <DatePickerSelector
+                    selectedPreset={selectedPreset}
+                    setSelectedPreset={setSelectedPreset}
+                    dateRange={dateRange}
+                    setDateRange={setDateRange}
+                    isLoading={isFetching}
+                    displayLabel={dynamicLabel}
+                />
+            </div>
+            {/* --- AKHIR PERUBAHAN --- */}
 
             <h3 className="text-lg font-semibold text-brand-accent ">Quick Stats</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"> 

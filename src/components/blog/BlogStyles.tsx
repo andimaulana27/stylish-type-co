@@ -75,6 +75,7 @@ const BlogStyles = () => {
         margin-top: 0.5em;
         margin-bottom: 0.5em;
         padding-left: 0;
+        margin-left: 1.5em;
       }
 
       /* 3. Atur ulang margin untuk paragraf <p> yang ada DI DALAM <li> */
