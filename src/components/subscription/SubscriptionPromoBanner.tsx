@@ -91,7 +91,7 @@ const SubscriptionPromoBanner = () => {
   // --- AKHIR LOGIKA PENGHITUNG ANGGOTA ---
 
   return (
-    <div className="relative overflow-hidden bg-gradient-to-t from-brand-primary-blue/20 to-brand-darkest text-center p-8 md:p-12 rounded-lg my-12 border border-brand-primary-blue/30 shadow-2xl shadow-brand-primary-blue/10">
+    <div className="relative overflow-hidden bg-gradient-to-t from-brand-accent/0 to-brand-darkest text-center p-8 md:p-12 rounded-lg my-12 border border-brand-accent/30 shadow-2xl shadow-brand-accent/10">
       
       <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 h-3/4 bg-brand-accent/15 rounded-full blur-3xl -z-0"></div>
       

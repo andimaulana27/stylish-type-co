@@ -57,10 +57,10 @@ const SubscriptionCard = ({
   const cardClasses = `bg-brand-darkest border rounded-lg p-8 md:p-12 h-full flex flex-col 
                        relative overflow-hidden group transition-all duration-300 
                        ${isRecommended && !isCurrentPlan 
-                         ? 'border-brand-primary-blue shadow-2xl shadow-brand-primary-blue/30 transform-gpu lg:-translate-y-4 hover:border-brand-accent' // Style menonjol (BARU)
+                         ? 'border-brand-accent shadow-2xl shadow-brand-accent/30 transform-gpu lg:-translate-y-4 hover:border-brand-accent' // Style menonjol (BARU)
                          : isCurrentPlan 
                          ? 'border-brand-secondary-green shadow-lg shadow-brand-secondary-green/20' // Style plan aktif
-                         : 'border-brand-accent/50 hover:border-brand-primary-blue/50 hover:-translate-y-1'}`; // Style default
+                         : 'border-brand-accent/50 hover:border-brand-accent/50 hover:-translate-y-1'}`; // Style default
   // --- AKHIR PERUBAHAN ---
 
   const currentPrice = billingCycle === 'yearly' ? plan.price_yearly / 12 : plan.price_monthly;
@@ -97,22 +97,22 @@ const SubscriptionCard = ({
 
       {/* Gradien Biru (Default untuk Recommended) - Hilang saat hover */}
       {isRecommended && !isCurrentPlan && (
-        <div className="absolute inset-0 bg-gradient-to-t from-brand-primary-blue/30 to-transparent opacity-100 group-hover:opacity-0 transition-opacity duration-300 pointer-events-none z-0"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-brand-accent/30 to-transparent opacity-100 group-hover:opacity-0 transition-opacity duration-300 pointer-events-none z-0"></div>
       )}
 
       {/* Gradien Oranye (Hover untuk Recommended) - Muncul saat hover */}
       {isRecommended && !isCurrentPlan && (
-        <div className="absolute inset-0 bg-gradient-to-t from-brand-accent/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-0"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-brand-accent/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-0"></div>
       )}
 
       {/* Gradien Biru (Hover untuk Non-Recommended) - Muncul saat hover */}
       {!isRecommended && (
-        <div className="absolute inset-0 bg-gradient-to-t from-brand-primary-blue/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-0"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-brand-accent/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-0"></div>
       )}
       
       {/* Efek Shadow untuk SEMUA hover (kecuali plan aktif) */}
       {!isCurrentPlan && (
-          <div className="absolute inset-0 shadow-lg shadow-brand-primary-blue/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-0"></div>
+          <div className="absolute inset-0 shadow-lg shadow-brand-accent/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-0"></div>
       )}
       {/* --- AKHIR PERUBAHAN LOGIKA GRADIEN --- */}
 
