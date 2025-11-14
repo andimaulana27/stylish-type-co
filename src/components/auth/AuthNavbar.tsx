@@ -12,9 +12,9 @@ const AuthNavbar = () => {
           <Link href="/" aria-label="Back to Homepage">
             <Image 
               // Logo dan ukuran disamakan dengan halaman checkout
-              src="/LOGO BARU ORANGE.svg"
+              src="/LOGO STYLISH.svg" // <-- LOGO DIPERBARUI
               alt="Stylish Type Logo"
-              width={210}
+              width={160}
               height={40}
               priority
             />

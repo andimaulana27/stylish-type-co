@@ -2,7 +2,7 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
+import Image from 'next/image'; // <-- Import Image
 import { usePathname } from 'next/navigation';
 import { useUI } from '@/context/UIContext';
 import { useAuth } from '@/context/AuthContext';
@@ -96,7 +96,13 @@ const Navbar = ({
               <div className="flex-shrink-0">
                 <Link href="/" aria-label="Back to Homepage" prefetch={true}>
                   {/* --- PERUBAHAN LOGO 1 (DESKTOP) --- */}
-                  <span className="text-3xl font-bold text-brand-accent">stylishType.co</span>
+                  <Image
+                    src="/LOGO STYLISH.svg"
+                    alt="Stylish Type Logo"
+                    width={160}
+                    height={40}
+                    priority
+                  />
                 </Link>
               </div>
               <div className="flex flex-grow items-center justify-center">
@@ -152,7 +158,13 @@ const Navbar = ({
               <div className="absolute left-1/2 -translate-x-1/2">
                 <Link href="/" aria-label="Back to Homepage">
                   {/* --- PERUBAHAN LOGO 2 (MOBILE HEADER) --- */}
-                  <span className="text-xl font-bold text-brand-accent">stylishType.co</span>
+                  <Image
+                    src="/LOGO STYLISH.svg"
+                    alt="Stylish Type Logo"
+                    width={160} // Sedikit lebih kecil untuk mobile
+                    height={32}
+                    priority
+                  />
                 </Link>
               </div>
               <div className="flex items-center gap-4">
@@ -180,13 +192,18 @@ const Navbar = ({
           <div className="flex items-center justify-between p-6 border-b border-white/10">
             <Link href="/" onClick={() => setIsMobileMenuOpen(false)}>
               {/* --- PERUBAHAN LOGO 3 (MOBILE SIDEBAR) --- */}
-              <span className="text-xl font-bold text-brand-accent">stylishType.co</span>
+              <Image
+                src="/LOGO STYLISH.svg"
+                alt="Stylish Type Logo"
+                width={160}
+                height={32}
+              />
             </Link>
             <button onClick={() => setIsMobileMenuOpen(false)} aria-label="Close menu">
               <X size={24} />
             </button>
           </div>
-          <nav className="flex-grow p-6">
+          <nav className="flex-grow p-6 overflow-y-auto">
             {/* --- PERUBAHAN UTAMA PADA RENDER MENU MOBILE DIMULAI DI SINI --- */}
             <ul className="space-y-1">
               {navLinks.map((link) => {

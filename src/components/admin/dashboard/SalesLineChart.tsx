@@ -69,10 +69,10 @@ const SalesLineChart = ({ salesData }: { salesData: SalesChartData[] }) => {
           <Line 
             type="monotone" 
             dataKey="sales" 
-            stroke="#f47253"
+            stroke="#CD9A51"
             strokeWidth={3}
-            dot={{ r: 5, fill: '#f47253', stroke: '#1A1D1A', strokeWidth: 2 }}
-            activeDot={{ r: 8, fill: '#f47253', stroke: '#121212', strokeWidth: 2 }}
+            dot={{ r: 5, fill: '#CD9A51', stroke: '#1A1D1A', strokeWidth: 2 }}
+            activeDot={{ r: 8, fill: '#CD9A51', stroke: '#121212', strokeWidth: 2 }}
           />
         </LineChart>
       </ResponsiveContainer>

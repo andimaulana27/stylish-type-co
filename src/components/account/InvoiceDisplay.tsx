@@ -65,7 +65,12 @@ export default function InvoiceDisplay({ invoice }: InvoiceDisplayProps) {
             <div className="flex justify-between items-start pb-8 mb-8 border-b border-white/10">
               <div>
                 {/* --- PEMBARUAN PATH LOGO DI SINI --- */}
-                <Image src="/LOGO BARU ORANGE.png" alt="Company Logo" width={200} height={50} />
+                <Image 
+                  src="/LOGO STYLISH.png" // <-- LOGO DIPERBARUI
+                  alt="Stylish Type Logo"
+                  width={200} // <-- UKURAN DISESUAIKAN
+                  height={38} // <-- UKURAN DISESUAIKAN
+                />
                 <p className="text-xs text-gray-400 mt-2">TIMELESS TYPOGRAPHY FOR TIMELESS COMPANY.</p>
               </div>
               <div className="text-right text-sm text-gray-300">

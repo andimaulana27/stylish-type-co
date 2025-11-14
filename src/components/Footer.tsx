@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import React, { useTransition, useRef } from 'react';
-import Image from 'next/image';
+import Image from 'next/image'; // <-- Import Image
 import toast from 'react-hot-toast';
 
 import { Mail, X } from 'lucide-react';
@@ -125,7 +125,12 @@ const Footer = () => {
             <div>
                <Link href="/" aria-label="Back to Homepage">
                  {/* --- PERUBAHAN LOGO FOOTER --- */}
-                 <span className="text-4xl font-bold text-brand-accent">stylishType.co</span>
+                 <Image
+                    src="/LOGO STYLISH.svg"
+                    alt="Stylish Type Logo"
+                    width={240} // Menyamakan dengan Navbar
+                    height={40}
+                  />
                </Link>
               <p className="mt-4 font-light text-sm max-w-xs">
                 Discover premium fonts that elevate your designs.

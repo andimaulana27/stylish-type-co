@@ -67,10 +67,10 @@ export default function EulaDisplay({ eulaData }: EulaDisplayProps) {
       <div className="p-8 md:p-12 bg-[#1C1C1E]">
         <div className="text-center py-8 border-b border-white/10">
           <Image 
-              src="/LOGO BARU ORANGE.png" 
-              alt="Timeless Type Logo" 
-              width={300}
-              height={57}
+              src="/LOGO STYLISH.png" // <-- LOGO DIPERBARUI
+              alt="Stylish Type Logo" 
+              width={300} // <-- UKURAN DISESUAIKAN
+              height={57} // <-- UKURAN DISESUAIKAN
               className="mx-auto" 
               priority
           />

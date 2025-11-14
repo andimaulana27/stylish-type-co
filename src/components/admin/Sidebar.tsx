@@ -96,8 +96,8 @@ export default function Sidebar({ counts, profile }: SidebarProps) {
         <div className="flex h-24 items-center justify-center pt-8 pb-8 px-6 border-b border-white/10">
           <Link href="/">
               <Image
-                  src="/LOGO BARU ORANGE.svg"
-                  alt="Timeless Type Logo"
+                  src="/LOGO STYLISH.svg" // <-- LOGO DIPERBARUI
+                  alt="Stylish Type Logo"
                   width={160}
                   height={32}
                   priority

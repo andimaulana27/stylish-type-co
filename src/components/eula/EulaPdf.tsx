@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
 export const EulaPdf = ({ data }: EulaPdfProps) => {
     if (!data) return null;
     
-    const logoUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/logo-orange.png`;
+    const logoUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/logo-stylish.png`;
 
     return (
         <Document title={`EULA - ${data.id.substring(0, 6).toUpperCase()}`}>

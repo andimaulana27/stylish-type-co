@@ -158,7 +158,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   brandColor: {
-    color: '#f47253',
+    color: '#CD9A51',
   }
 });
 
@@ -167,7 +167,7 @@ export const InvoicePdf = ({ data }: { data: InvoiceData }) => {
 
     const profile = data.profiles;
     const items = data.order_items || [];
-    const logoUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/logo-orange.png`;
+    const logoUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/logo-stylish.png`;
 
     const splitFeatures = (features: string[]) => {
       const mid = Math.ceil(features.length / 2);
