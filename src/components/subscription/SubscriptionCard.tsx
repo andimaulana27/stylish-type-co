@@ -52,8 +52,7 @@ const SubscriptionCard = ({
   }
   
   // --- PERUBAHAN UTAMA STYLING KARTU ---
-  // Default: border-brand-primary-blue, shadow-brand-primary-blue
-  // Hover: hover:border-brand-accent
+  
   const cardClasses = `bg-brand-darkest border rounded-lg p-8 md:p-12 h-full flex flex-col 
                        relative overflow-hidden group transition-all duration-300 
                        ${isRecommended && !isCurrentPlan 
