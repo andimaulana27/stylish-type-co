@@ -7,7 +7,8 @@ import { Database } from '@/lib/database.types';
 export const revalidate = 3600; // Update sitemap setiap jam
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.timelesstype.co';
+  // --- PERBAIKAN 1: Ganti domain default ke stylishtype.co ---
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.stylishtype.co';
 
   // Inisialisasi Supabase client khusus untuk server
   const cookieStore = cookies();
@@ -24,7 +25,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // 1. Ambil semua slug dari 'fonts'
   const { data: fonts } = await supabase.from('fonts').select('slug, created_at');
   const fontUrls = fonts?.map(font => ({
-    url: `${baseUrl}/fonts/${font.slug}`,
+    // --- PERBAIKAN 2: Sesuaikan path font menjadi /product (sesuai struktur folder baru) ---
+    url: `${baseUrl}/product/${font.slug}`,
     lastModified: new Date(font.created_at),
   })) || [];
 
@@ -53,7 +55,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticUrls = [
     { url: baseUrl, lastModified: new Date() },
     { url: `${baseUrl}/bundles`, lastModified: new Date() },
-    { url: `${baseUrl}/fonts`, lastModified: new Date() },
+    // --- PERBAIKAN 3: Ganti /fonts menjadi /product ---
+    { url: `${baseUrl}/product`, lastModified: new Date() },
     { url: `${baseUrl}/logotype`, lastModified: new Date() },
     { url: `${baseUrl}/font-pair`, lastModified: new Date() },
     { url: `${baseUrl}/subscription`, lastModified: new Date() },

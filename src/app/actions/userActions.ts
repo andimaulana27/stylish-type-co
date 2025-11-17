@@ -652,17 +652,19 @@ export async function getDownloadUrlAction(productId: string, productType: 'font
     }
 
     try {
-        // 1. Verifikasi kepemilikan
+        // 1. Verifikasi kepemilikan (PERBAIKAN DI SINI)
+        // Kita harus menggunakan '!inner' untuk memastikan relasi orders dimuat
+        // agar filter .eq('orders.user_id', ...) berfungsi valid.
         const { data: ownedItem, error: checkError } = await supabase
             .from('order_items')
-            .select('id')
+            .select('id, orders!inner(user_id)') 
             .eq('orders.user_id', user.id)
             .eq(productType === 'font' ? 'font_id' : 'bundle_id', productId)
             .limit(1)
-            .single(); // Cukup cari satu saja
+            .single();
 
+        // Jika tidak ditemukan di pembelian biasa, cek langganan aktif
         if (checkError || !ownedItem) {
-            // Jika tidak ditemukan di pembelian biasa, cek langganan aktif
             const { data: activeSub } = await supabase
                 .from('user_subscriptions')
                 .select('id')
@@ -672,6 +674,8 @@ export async function getDownloadUrlAction(productId: string, productType: 'font
                 .single();
 
             if (!activeSub) {
+                // Debugging: Uncomment baris ini jika ingin melihat error spesifik di console server
+                // console.error("Download Check Error:", checkError);
                 return { error: 'You do not own this product or have an active subscription.' };
             }
         }
@@ -690,8 +694,8 @@ export async function getDownloadUrlAction(productId: string, productType: 'font
             return { error: 'Downloadable file not found for this product.' };
         }
 
-        // 3. Buat signed URL
-        const { data, error: urlError } = await supabase.storage.from('products').createSignedUrl(download_path, 604800); // 7 hari
+        // 3. Buat signed URL (Valid selama 7 hari / 604800 detik)
+        const { data, error: urlError } = await supabase.storage.from('products').createSignedUrl(download_path, 604800);
 
         if (urlError) throw urlError;
 
@@ -699,7 +703,7 @@ export async function getDownloadUrlAction(productId: string, productType: 'font
 
     } catch (error: unknown) {
         const message = error instanceof Error ? error.message : `An unknown error occurred.`;
-        console.error("Error generating download URL:", message); // Log error
+        console.error("Error generating download URL:", message);
         return { error: `Failed to get download link: ${message}` };
     }
 }

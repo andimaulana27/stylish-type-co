@@ -40,7 +40,7 @@ async function getSubscriptionPlanForOrder(supabase: ReturnType<typeof createSup
         .single();
     
     if (subError || !userSubscription) {
-        console.error("Could not find a matching subscription for the order date.", subError);
+        // console.error("Could not find a matching subscription for the order date.", subError); // Optional log
         return null;
     }
 
@@ -60,7 +60,8 @@ export async function getSubscriptionOrderAction() {
             .from('orders')
             .select('id')
             .eq('user_id', user.id)
-            .in('status', ['Subscription Purchase', 'Completed']) 
+            // --- PERBAIKAN DI SINI: Hanya ambil Subscription Purchase ---
+            .eq('status', 'Subscription Purchase') 
             .order('created_at', { ascending: false })
             .limit(1)
             .single();
@@ -89,7 +90,11 @@ export async function getSubscriptionHistoryAction() {
             .from('orders')
             .select('id, created_at, total_amount, status, order_items (id)')
             .eq('user_id', user.id)
-            .in('status', ['Subscription Purchase', 'Completed'])
+            // --- PERBAIKAN UTAMA DI SINI ---
+            // Sebelumnya: .in('status', ['Subscription Purchase', 'Completed'])
+            // Sekarang: Kita kunci HANYA 'Subscription Purchase'.
+            // Order produk biasa statusnya 'Completed', jadi otomatis tidak akan terambil.
+            .eq('status', 'Subscription Purchase') 
             .order('created_at', { ascending: false });
 
         if (ordersError) throw ordersError;
@@ -101,19 +106,19 @@ export async function getSubscriptionHistoryAction() {
 
         if (subsError) throw subsError;
 
+        // Kita tidak perlu lagi melakukan filter manual (array.filter) yang rumit
+        // karena data dari database sudah pasti bersih.
         const subscriptionOrders = (orders || [])
-            .filter(order => {
-                const itemCount = order.order_items.length;
-                return order.status === 'Subscription Purchase' || (order.status === 'Completed' && itemCount === 0);
-            })
             .map(order => {
                 const orderDate = new Date(order.created_at).getTime();
                 let planName: string | null = 'N/A';
 
+                // Logika mencocokkan order dengan nama plan berdasarkan waktu
                 const matchingSub = (userSubscriptions as UserSubscriptionWithName[] || []).reduce((closest, sub) => {
                     const subStartDate = new Date(sub.current_period_start).getTime();
                     const timeDiff = Math.abs(orderDate - subStartDate);
 
+                    // Toleransi waktu 1 menit (60000ms) antara pembuatan order dan subscription record
                     if (timeDiff < 60000) { 
                         if (!closest || timeDiff < closest.diff) {
                             return { sub, diff: timeDiff };
@@ -187,7 +192,6 @@ export async function getInvoiceDataAction(orderId: string) {
                         fonts: null,
                         bundles: null,
                         licenses: {
-                            // --- PERBAIKAN 1: Hapus tambahan kata "Plan" ---
                             name: planDetails.name,
                             allowed: features?.allowed || []
                         }
@@ -298,7 +302,6 @@ export async function getEulaDataAction(orderId: string) {
             const planDetails = await getSubscriptionPlanForOrder(supabase, order);
             if (planDetails) {
                  const features = planDetails.features as { allowed?: string[] };
-                 // --- PERBAIKAN 2: Hapus tambahan kata "Plan" dan "License" ---
                  eulaItemList.push({
                     productName: planDetails.name,
                     licenseName: 'Subscription',
