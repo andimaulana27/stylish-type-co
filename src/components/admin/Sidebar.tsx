@@ -9,7 +9,8 @@ import { useTransition, useState } from 'react';
 import { 
   LayoutDashboard, Home, Users, ShoppingBag, LogOut, ChevronDown, Box, Type,
   Package, ShieldCheck, Star, Handshake, Gem, FileText, Newspaper, Megaphone,
-  ImageIcon, Building2, GalleryHorizontal, Mail, BarChart3
+  ImageIcon, Building2, GalleryHorizontal, Mail, BarChart3, Link as LinkIcon,
+  Settings,
 } from 'lucide-react';
 import { Tables } from '@/lib/database.types';
 
@@ -58,6 +59,7 @@ export default function Sidebar({ counts, profile }: SidebarProps) {
         { name: 'Gallery', href: '/admin/gallery', icon: ImageIcon },
         { name: 'Popular Bundles', href: '/admin/homepage/popular-bundles', icon: Package },
         { name: 'Featured Products', href: '/admin/homepage/featured-products', icon: Star },
+        { name: 'Social Links', href: '/admin/social-links', icon: LinkIcon },
       ]
     },
     { 
@@ -68,6 +70,7 @@ export default function Sidebar({ counts, profile }: SidebarProps) {
       ]
     },
     { name: 'Manage Orders', href: '/admin/orders', icon: ShoppingBag, roles: ['admin'] },
+    { name: 'Site Settings', href: '/admin/settings', icon: Settings, roles: ['admin'] },
   ];
 
   const pathname = usePathname();
@@ -91,7 +94,7 @@ export default function Sidebar({ counts, profile }: SidebarProps) {
   };
 
   return (
-    <aside className="w-64 flex-shrink-0 flex flex-col bg-gradient-to-b from-brand-darkest from-25% to-brand-accent/20 text-brand-light shadow-lg sticky top-0 h-screen">
+    <aside className="w-64 flex-shrink-0 flex flex-col bg-gradient-to-b from-brand-darkest from-25% to-brand-accent/40 text-brand-light shadow-lg sticky top-0 h-screen">
       <div className="flex flex-1 flex-col overflow-y-auto">
         <div className="flex h-24 items-center justify-center pt-8 pb-8 px-6 border-b border-white/10">
           <Link href="/">

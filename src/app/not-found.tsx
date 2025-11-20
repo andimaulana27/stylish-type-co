@@ -12,12 +12,26 @@ import BlogMegaMenu from '@/components/BlogMegaMenu';
 import MarqueeRow from '@/components/MarqueeRow';
 import { getAllFontsForMarqueeAction } from './actions/productActions';
 
+// --- (PERBAIKAN 1) Impor action & tipe ---
+import { getSocialLinksAction } from './actions/socialActions';
+import { Tables } from '@/lib/database.types';
+
 // Komponen ini harus async untuk mengambil data
 export default async function NotFound() {
   
-  // Ambil data yang diperlukan oleh Navbar dan Marquee
-  const { featuredFonts, latestBundles } = await getSuggestionProductsAction();
-  const { products: marqueeFonts } = await getAllFontsForMarqueeAction();
+  // --- (PERBAIKAN 2) Ambil socialLinks secara paralel ---
+  const [suggestionProducts, marqueeData, socialLinksData] = await Promise.all([
+    getSuggestionProductsAction(),
+    getAllFontsForMarqueeAction(),
+    getSocialLinksAction()
+  ]);
+
+  const { featuredFonts, latestBundles } = suggestionProducts;
+  const { products: marqueeFonts } = marqueeData;
+  const { links: socialLinks } = socialLinksData;
+  
+  // Amankan tipe data
+  const typedSocialLinks = (socialLinks as Tables<'social_links'>[]) || [];
 
   return (
     // Kita buat ulang struktur layout utama di sini
@@ -41,7 +55,6 @@ export default async function NotFound() {
               />
             </div>
             
-            {/* --- PERUBAHAN 1: Menambahkan jarak di sini --- */}
             <div className="mt-12">
               <SectionHeader
                 title="Page Not Found"
@@ -59,16 +72,15 @@ export default async function NotFound() {
             </div>
         </div>
 
-        {/* --- PERUBAHAN 2: Menambahkan wrapper gradien biru --- */}
         <div className="relative overflow-hidden">
-          <div className="absolute inset-x-0 bottom-0 h-3/4 bg-gradient-to-t from-brand-primary-blue to-transparent opacity-40 z-0"></div>
+          <div className="absolute inset-x-0 bottom-0 h-3/4 bg-gradient-to-t from-brand-accent to-transparent opacity-40 z-0"></div>
           <div className="relative z-10">
             {marqueeFonts.length > 0 && (
               <div className="py-20 group relative text-center border-t border-white/10">
                 <div className="container mx-auto px-6">
                     <SectionHeader
                         title="Our Staff Picks"
-                        subtitle="Check out some of our favorite fonts, curated by the Timeless Type team."
+                        subtitle="Check out some of our favorite fonts, curated by the Stylish Type team."
                     />
                 </div>
                 <MarqueeRow products={marqueeFonts} animationClass="animate-marquee-reverse-fast" />
@@ -81,11 +93,12 @@ export default async function NotFound() {
             )}
           </div>
         </div>
-        {/* --- AKHIR PERUBAHAN --- */}
 
       </main>
       <BackToTopButton />
-      <Footer />
+      
+      {/* --- (PERBAIKAN 3) Teruskan prop 'socialLinks' ke Footer --- */}
+      <Footer socialLinks={typedSocialLinks} />
     </div>
   );
 }

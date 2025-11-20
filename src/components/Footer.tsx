@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import React, { useTransition, useRef } from 'react';
-import Image from 'next/image'; // <-- Import Image
+import Image from 'next/image';
 import toast from 'react-hot-toast';
 
 import { Mail, X } from 'lucide-react';
@@ -17,6 +17,20 @@ import DribbbleIcon from './icons/footer/DribbbleIcon';
 import PaypalIcon from './icons/footer/PaypalIcon';
 import VisaIcon from './icons/footer/VisaIcon';
 import MastercardIcon from './icons/footer/MastercardIcon';
+import { Tables } from '@/lib/database.types'; // <-- 1. Impor Tipe
+
+type SocialLink = Tables<'social_links'>; // <-- 2. Tentukan Tipe
+
+// 3. Peta (Map) untuk mencocokkan icon_key dengan komponen Ikon
+const iconMap: { [key: string]: React.FC<React.SVGProps<SVGSVGElement>> } = {
+  facebook: FacebookIcon,
+  instagram: InstagramIcon,
+  linkedin: LinkedinIcon,
+  behance: BehanceIcon,
+  dribbble: DribbbleIcon,
+  // Tambahkan ikon lain di sini jika Anda menambahkannya di admin
+  // 'twitter': TwitterIcon, 
+};
 
 const SocialLink = ({ href, IconComponent, alt }: { href: string, IconComponent: React.FC<React.SVGProps<SVGSVGElement>>, alt: string }) => (
   <a
@@ -61,7 +75,8 @@ const allBlogCategories = [
 ].sort();
 
 
-const Footer = () => {
+// 4. Terima `socialLinks` sebagai prop
+const Footer = ({ socialLinks }: { socialLinks: SocialLink[] }) => {
   const [isPending, startTransition] = useTransition();
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -123,7 +138,7 @@ const Footer = () => {
           
           <div className="md:col-span-3 space-y-8 flex flex-col items-center md:items-start text-center md:text-left">
             <div>
-               <Link href="/" aria-label="Back to Homepage">
+              <Link href="/" aria-label="Back to Homepage">
                  {/* --- PERUBAHAN LOGO FOOTER --- */}
                  <Image
                     src="/LOGO STYLISH.svg"
@@ -135,12 +150,19 @@ const Footer = () => {
               <p className="mt-4 font-light text-sm max-w-xs">
                 Discover premium fonts that elevate your designs.
               </p>
+              {/* --- 5. Render tautan sosial secara dinamis --- */}
               <div className="flex items-center justify-center md:justify-start gap-4 mt-6">
-                <SocialLink href="#" IconComponent={FacebookIcon} alt="Facebook" />
-                <SocialLink href="#" IconComponent={InstagramIcon} alt="Instagram" />
-                <SocialLink href="#" IconComponent={LinkedinIcon} alt="LinkedIn" />
-                <SocialLink href="#" IconComponent={BehanceIcon} alt="Behance" />
-                <SocialLink href="#" IconComponent={DribbbleIcon} alt="Dribbble" />
+                {socialLinks.map((link) => {
+                  const Icon = iconMap[link.icon_key]; // Dapatkan komponen Ikon dari peta
+                  return Icon ? (
+                    <SocialLink
+                      key={link.id}
+                      href={link.url}
+                      IconComponent={Icon}
+                      alt={link.name}
+                    />
+                  ) : null; // Jangan render jika ikon tidak ditemukan
+                })}
               </div>
             </div>
             <div>
@@ -161,7 +183,7 @@ const Footer = () => {
             <ul className="space-y-0 font-light text-sm">
               {allFontCategories.map(category => (
                  <li key={category} className="border-b border-brand-gray-light/50 last:border-b-0">
-                    <Link href={`/product?category=${encodeURIComponent(category)}`} className="block py-2.5 hover:text-brand-accent transition-colors">{category}</Link>
+                    <Link href={`/fonts?category=${encodeURIComponent(category)}`} className="block py-2.5 hover:text-brand-accent transition-colors">{category}</Link>
                  </li>
               ))}
             </ul>
@@ -192,8 +214,8 @@ const Footer = () => {
           </div>
           
           <div className="md:col-span-3">
-            <div className="relative overflow-hidden bg-brand-dark-secondary/0 border border-brand-accent/30 rounded-2xl p-8 text-center transform hover:scale-105 transition-transform duration-300">
-                <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-brand-accent/20 to-transparent z-0"></div>
+            <div className="relative overflow-hidden bg-brand-dark-secondary/40 border border-brand-accent/50 rounded-2xl p-8 text-center transform hover:scale-105 transition-transform duration-300">
+                <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-brand-accent/40 to-transparent z-0"></div>
                 <div className="relative z-10">
                     <h3 className="font-semibold text-brand-accent text-lg mb-2">Subscribe and Stay In the Loop</h3>
                     <p className="font-light text-sm mb-6">

@@ -11,21 +11,32 @@ import BlogMegaMenu from '@/components/BlogMegaMenu';
 import { cookies } from 'next/headers';
 import CookieConsentBanner from '@/components/CookieConsentBanner';
 
+// --- UPDATE BARU: Import Action Social Links & Tipe Database ---
+import { getSocialLinksAction } from '@/app/actions/socialActions';
+import { Tables } from '@/lib/database.types';
+
 export default async function MainLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { featuredFonts, latestBundles } = await getSuggestionProductsAction();
+  
+  // --- UPDATE BARU: Mengambil data Produk, Social Links, dan Cookie secara bersamaan (Paralel) ---
+  const [suggestionProducts, socialLinksData, consentCookie] = await Promise.all([
+    getSuggestionProductsAction(),
+    getSocialLinksAction(), // Mengambil data social links dari database
+    cookies().get('stylishtype_cookie_consent') // Tetap menggunakan nama cookie 'stylishtype'
+  ]);
 
-  const cookieStore = cookies();
+  // Destructuring data agar mudah digunakan
+  const { featuredFonts, latestBundles } = suggestionProducts;
+  const { links: socialLinks } = socialLinksData;
   
-  // --- PERBAIKAN DI SINI ---
-  // Nama cookie disesuaikan menjadi 'stylishtype_cookie_consent'
-  const consentCookie = cookieStore.get('stylishtype_cookie_consent');
-  // --- AKHIR PERBAIKAN ---
-  
+  // Cek status consent cookie
   const hasConsent = consentCookie?.value === 'accepted';
+
+  // (Opsional) Memastikan tipe data aman untuk dikirim ke Footer
+  const typedSocialLinks = (socialLinks as Tables<'social_links'>[]) || [];
 
   return (
     <>
@@ -43,7 +54,10 @@ export default async function MainLayout({
         {children}
       </main>
       <BackToTopButton />
-      <Footer />
+      
+      {/* --- UPDATE BARU: Mengirim data socialLinks ke Footer --- */}
+      <Footer socialLinks={typedSocialLinks} />
+      
       <CookieConsentBanner initialConsent={hasConsent} />
     </>
   );
