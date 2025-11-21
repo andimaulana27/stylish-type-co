@@ -22,6 +22,12 @@ import DatePickerSelector from '@/components/admin/dashboard/DatePickerSelector'
 
 type AnalyticsData = Awaited<ReturnType<typeof getDashboardAnalyticsAction>>;
 
+// --- FIX: Definisikan tipe TopSellingFont di sini agar TypeScript mengenalnya ---
+type TopSellingFont = {
+    name: string;
+    sales_count: number;
+};
+
 const presets: { [key: string]: string } = {
     last7days: 'Last 7 Days',
     last30days: 'Last 30 Days',
@@ -91,7 +97,11 @@ export default function AdminDashboardPage() {
     const stats = analyticsData?.stats;
     const salesSummary = analyticsData?.salesSummary;
     const salesChartData = analyticsData?.salesChartData || [];
-    const topSellingFonts = analyticsData?.topSellingFonts || [];
+    
+    // --- FIX UTAMA: Menambahkan casting 'as TopSellingFont[]' di sini ---
+    // Ini memberitahu TypeScript bahwa data ini pasti array TopSellingFont, bukan boolean/never
+    const topSellingFonts = (analyticsData?.topSellingFonts || []) as TopSellingFont[];
+    
     const recentOrders = analyticsData?.recentOrders || [];
     
     const dynamicLabel = getDynamicPeriodLabel(selectedPreset, dateRange);
