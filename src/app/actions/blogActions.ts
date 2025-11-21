@@ -4,7 +4,7 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
-import { Database, TablesInsert, TablesUpdate, Tables } from '@/lib/database.types'; // <-- Pastikan Tables diimpor
+import { Database, TablesInsert, TablesUpdate, Tables } from '@/lib/database.types'; 
 
 type PostForDeletion = Pick<Database['public']['Tables']['posts']['Row'], 'id' | 'image_url'>;
 
@@ -46,7 +46,6 @@ type ActionResult = {
     error?: string;
 };
 
-// --- FUNGSI BARU: Mengambil detail blog berdasarkan array slug ---
 export async function getBlogDetailsBySlugsAction(slugs: string[]): Promise<{ data: Pick<Tables<'posts'>, 'title' | 'slug' | 'image_url'>[], error?: string }> {
     if (!slugs || slugs.length === 0) {
         return { data: [] };
@@ -57,11 +56,10 @@ export async function getBlogDetailsBySlugsAction(slugs: string[]): Promise<{ da
             .from('posts')
             .select('title, slug, image_url')
             .in('slug', slugs)
-            .eq('is_published', true); // Hanya ambil yang sudah publish
+            .eq('is_published', true);
 
         if (error) throw error;
 
-        // Pastikan urutan data sesuai dengan urutan slug input jika memungkinkan
         const sortedData = slugs.map(slug => data?.find(post => post.slug === slug)).filter(Boolean) as Pick<Tables<'posts'>, 'title' | 'slug' | 'image_url'>[];
 
         return { data: sortedData };
@@ -71,11 +69,9 @@ export async function getBlogDetailsBySlugsAction(slugs: string[]): Promise<{ da
         return { data: [], error: message };
     }
 }
-// --- AKHIR FUNGSI BARU ---
 
 
 export async function bulkDeletePostsAction(postsToDelete: PostForDeletion[]) {
-    // ... (kode fungsi ini tetap sama)
     if (!postsToDelete || postsToDelete.length === 0) {
         return { error: 'No posts selected for deletion.' };
     }
@@ -108,7 +104,6 @@ export async function bulkDeletePostsAction(postsToDelete: PostForDeletion[]) {
 
 
 export async function getPostsForMegaMenuAction() {
-    // ... (kode fungsi ini tetap sama)
     const supabase = createSupabaseActionClient();
     try {
         const [newPostsRes, popularPostsRes] = await Promise.all([
@@ -137,7 +132,6 @@ export async function getPostsForMegaMenuAction() {
 }
 
 export async function getRelatedPostsAction(currentPostId: string, category: string) {
-    // ... (kode fungsi ini tetap sama)
     const supabase = createSupabaseActionClient();
     try {
         const { data, error } = await supabase
@@ -158,7 +152,6 @@ export async function getRelatedPostsAction(currentPostId: string, category: str
 }
 
 export async function getLatestPostsAction() {
-    // ... (kode fungsi ini tetap sama)
     const supabase = createSupabaseActionClient();
     try {
         const { data, error } = await supabase
@@ -177,7 +170,6 @@ export async function getLatestPostsAction() {
 }
 
 export async function createPostAction(formData: FormData): Promise<ActionResult> {
-    // ... (kode fungsi ini tetap sama)
     const supabase = createSupabaseActionClient();
 
     try {
@@ -208,7 +200,6 @@ export async function createPostAction(formData: FormData): Promise<ActionResult
 }
 
 export async function updatePostAction(postId: string, formData: FormData): Promise<ActionResult> {
-    // ... (kode fungsi ini tetap sama)
     const supabase = createSupabaseActionClient();
 
     try {
@@ -240,7 +231,6 @@ export async function updatePostAction(postId: string, formData: FormData): Prom
 }
 
 export async function deletePostAction(postId: string): Promise<ActionResult> {
-    // ... (kode fungsi ini tetap sama)
     const supabase = createSupabaseActionClient();
     try {
         const { data: { user } } = await supabase.auth.getUser();
@@ -267,7 +257,6 @@ export async function deletePostAction(postId: string): Promise<ActionResult> {
 }
 
 export async function getBlogAdsConfigAction() {
-    // ... (kode fungsi ini tetap sama)
     const supabase = createSupabaseActionClient();
     try {
         const { data, error } = await supabase
@@ -283,12 +272,12 @@ export async function getBlogAdsConfigAction() {
 }
 
 export async function updateBlogAdsConfigAction(configs: AdSlotConfig[]) {
-    // ... (kode fungsi ini tetap sama)
     const supabase = createSupabaseActionClient();
     try {
         const upsertData = configs.map(config => ({
             position: config.position,
-            ad_type: config.ad_type,
+            // PERBAIKAN DI SINI: Menambahkan Type Assertion pada ad_type
+            ad_type: config.ad_type as "google_ads" | "banner",
             google_script: config.ad_type === 'google_ads' ? config.google_script : null,
             banner_image_url: config.ad_type === 'banner' ? config.banner_image_url : null,
             is_active: true,
@@ -309,7 +298,6 @@ export async function updateBlogAdsConfigAction(configs: AdSlotConfig[]) {
 }
 
 export async function getBlogCategoriesAction() {
-    // ... (kode fungsi ini tetap sama)
     const supabase = createSupabaseActionClient();
     try {
         const { data, error } = await supabase
