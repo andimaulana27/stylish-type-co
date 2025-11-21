@@ -94,9 +94,11 @@ export default function ManageUsersPage() {
                 toast.error(result.error);
             } else {
                 toast.success(result.success || 'Role updated!');
-                // --- PERBAIKAN DISINI: Menambahkan casting "as Profile['role']" ---
                 setUsers(currentUsers => 
-                    currentUsers.map(u => u.id === userId ? { ...u, role: newRole as Profile['role'] } : u)
+                    currentUsers.map(u => 
+                        // PERBAIKAN DI SINI: Type Assertion ditambahkan
+                        u.id === userId ? { ...u, role: newRole as Profile['role'] } : u
+                    )
                 );
             }
         });
