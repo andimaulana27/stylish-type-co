@@ -53,13 +53,15 @@ const SubscriptionCard = ({
   
   // --- PERUBAHAN UTAMA STYLING KARTU ---
   
-  const cardClasses = `bg-brand-darkest border rounded-lg p-8 md:p-12 h-full flex flex-col 
-                       relative overflow-hidden group transition-all duration-300 
-                       ${isRecommended && !isCurrentPlan 
-                         ? 'border-brand-accent shadow-2xl shadow-brand-accent/30 transform-gpu lg:-translate-y-4 hover:border-brand-accent' // Style menonjol (BARU)
-                         : isCurrentPlan 
-                         ? 'border-brand-secondary-green shadow-lg shadow-brand-secondary-green/20' // Style plan aktif
-                         : 'border-brand-accent/50 hover:border-brand-accent/50 hover:-translate-y-1'}`; // Style default
+ // SESUDAH (Ubah sementara ke Merah):
+const cardClasses = `bg-brand-darkest border rounded-lg p-8 md:p-12 h-full flex flex-col 
+                     relative overflow-hidden group transition-all duration-300 
+                     ${isRecommended && !isCurrentPlan 
+                       ? 'border-brand-accent shadow-2xl shadow-brand-accent/30 transform-gpu lg:-translate-y-4 hover:border-brand-accent' 
+                       : isCurrentPlan 
+                       ? 'border-brand-secondary-green shadow-lg shadow-brand-secondary-green/20' 
+                       // UBAH BAGIAN BAWAH INI:
+                       : 'border-red-500 hover:border-red-500 hover:-translate-y-1'}`; // Style default
   // --- AKHIR PERUBAHAN ---
 
   const currentPrice = billingCycle === 'yearly' ? plan.price_yearly / 12 : plan.price_monthly;
