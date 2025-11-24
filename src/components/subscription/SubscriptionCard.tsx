@@ -61,7 +61,7 @@ const cardClasses = `bg-brand-darkest border rounded-lg p-8 md:p-12 h-full flex 
                        : isCurrentPlan 
                        ? 'border-brand-secondary-green shadow-lg shadow-brand-secondary-green/20' 
                        // UBAH BAGIAN BAWAH INI:
-                       : 'border-red-500 hover:border-red-500 hover:-translate-y-1'}`; // Style default
+                       : 'border-brand-accent/50 hover:border-brand-accent/50 hover:-translate-y-1'}`; // Style default
   // --- AKHIR PERUBAHAN ---
 
   const currentPrice = billingCycle === 'yearly' ? plan.price_yearly / 12 : plan.price_monthly;
