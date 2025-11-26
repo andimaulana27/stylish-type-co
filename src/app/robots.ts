@@ -2,20 +2,21 @@
 import { MetadataRoute } from 'next';
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.timelesstype.co';
+  // PERBAIKAN: Gunakan domain baru (stylishtype.co) dan hapus 'www' agar konsisten
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://stylishtype.co';
 
   return {
-    rules: [
-      {
-        userAgent: '*', // Berlaku untuk semua robot (Googlebot, Bingbot, dll.)
-        allow: '/', // Izinkan untuk merayapi semua halaman
-        disallow: [
-            '/admin/', // Jangan rayapi halaman admin
-            '/account/', // Jangan rayapi halaman akun pengguna
-            '/checkout/', // Jangan rayapi halaman checkout
-        ],
-      },
-    ],
-    sitemap: `${baseUrl}/sitemap.xml`, // Tunjukkan lokasi sitemap Anda
+    rules: {
+      userAgent: '*', // Berlaku untuk semua robot
+      allow: '/',
+      disallow: [
+        '/admin/',    // Halaman admin
+        '/account/',  // Dashboard user
+        '/checkout/', // Proses pembayaran
+        '/auth/',     // Halaman sistem login/register
+        '/api/',      // Endpoint API backend
+      ],
+    },
+    sitemap: `${baseUrl}/sitemap.xml`, // Lokasi sitemap
   };
 }
