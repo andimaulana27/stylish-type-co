@@ -155,7 +155,7 @@ export const AdminOrderNotificationEmail: React.FC<AdminOrderNotificationEmailPr
                     <td>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
-                        src={`${siteUrl}/EMAIL.jpg`}
+                        src={`${siteUrl}/EMAIL1.png`}
                         alt="Notification Banner"
                         style={bannerStyle}
                       />

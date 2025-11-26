@@ -162,7 +162,7 @@ export const OrderConfirmationEmail: React.FC<OrderConfirmationEmailProps> = ({
                     <td>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
-                        src={`${siteUrl}/EMAIL.jpg`}
+                        src={`${siteUrl}/EMAIL1.png`}
                         alt="Thank you for your purchase"
                         style={bannerStyle}
                       />

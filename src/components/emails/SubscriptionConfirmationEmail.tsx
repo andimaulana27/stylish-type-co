@@ -111,7 +111,7 @@ export const SubscriptionConfirmationEmail: React.FC<SubscriptionConfirmationEma
                     <td>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
-                        src={`${siteUrl}/EMAIL.jpg`}
+                        src={`${siteUrl}/EMAIL1.png`}
                         alt="Welcome to your subscription"
                         style={bannerStyle}
                       />

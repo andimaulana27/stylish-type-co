@@ -81,7 +81,7 @@ export const NewsletterEmail: React.FC<NewsletterEmailProps> = ({
                     <td>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
-                        src={`${siteUrl}/EMAIL.jpg`} // Pastikan path banner ini benar
+                        src={`${siteUrl}/EMAIL1.png`} // Pastikan path banner ini benar
                         alt="Timeless Type Newsletter"
                         style={bannerStyle}
                       />
