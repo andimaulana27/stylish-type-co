@@ -8,9 +8,8 @@ import { UIProvider } from '@/context/UIContext'
 import { AuthProvider } from '@/context/AuthContext'
 import { Toaster } from 'react-hot-toast'
 import { GoogleAnalytics } from '@/components/GoogleAnalytics'
-import { getSiteConfigAction } from '@/app/actions/configActions'
-// --- PERUBAHAN: Import komponen FacebookPixel baru ---
-import FacebookPixel from '@/components/FacebookPixel'
+// Import komponen Pixel yang baru kita perbaiki
+import FacebookPixel from '@/components/FacebookPixel' 
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -34,8 +33,8 @@ const misturSleuth = localFont({
 
 export const metadata: Metadata = {
    title: {
-    default: 'Stylish Type | Premium Fonts for Designers',
-    template: '%s | Stylish Type',
+    default: 'Stylish Type | Premium Fonts for Designers', 
+    template: '%s | Stylish Type', 
   },
   description: 'Discover a curated collection of stunning typography.',
   other: {
@@ -43,22 +42,17 @@ export const metadata: Metadata = {
   }
 }
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const supabaseStorageUrl = "https://fxjazgmdfhiojmapttda.supabase.co";
-
-  // Ambil konfigurasi situs (termasuk Pixel ID)
-  const { data: config } = await getSiteConfigAction();
-
   return (
     <html lang="en" className={`${poppins.variable} ${luxuriousScript.variable} ${misturSleuth.variable} h-full`}>
       <head>
         <link
           rel="preconnect"
-          href={supabaseStorageUrl}
+          href="https://fxjazgmdfhiojmapttda.supabase.co"
           crossOrigin="anonymous"
         />
         
@@ -75,11 +69,20 @@ export default async function RootLayout({
       
       <body className={`${poppins.className} bg-brand-dark-secondary h-full flex flex-col`}>
         
-        {/* --- PERUBAHAN: Memanggil Komponen Pixel Terpisah --- */}
-        {config?.meta_pixel_id && (
-            <FacebookPixel id={config.meta_pixel_id} />
-        )}
-        {/* --- Akhir Perubahan Meta Pixel --- */}
+        {/* --- PASANG PIXEL DISINI --- */}
+        {/* Kita pasang langsung tanpa syarat config database untuk memastikan jalan */}
+        <Suspense fallback={null}>
+            <FacebookPixel />
+        </Suspense>
+        
+        {/* Noscript sebagai cadangan (sesuai instruksi Meta) */}
+        <noscript>
+          <img height="1" width="1" style={{display:'none'}}
+            src="https://www.facebook.com/tr?id=1415867166812105&ev=PageView&noscript=1"
+            alt=""
+          />
+        </noscript>
+        {/* --- AKHIR PIXEL --- */}
 
         <UIProvider>
           <AuthProvider>
