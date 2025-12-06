@@ -75,7 +75,7 @@ export default async function RootLayout({
         {/* --- 5. Tambahkan Meta Pixel Script di sini --- */}
         {config?.meta_pixel_id && (
           <>
-            <Script id="meta-pixel-script" strategy="afterInteractive">
+            <Script id="meta-pixel-script" strategy="lazyOnload">
               {`
                 !function(f,b,e,v,n,t,s)
                 {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
