@@ -1,20 +1,20 @@
 // next.config.mjs
 
 /**
- * Konfigurasi untuk Content Security Policy (CSP) - Versi Final.
- * Telah ditambahkan semua domain yang dibutuhkan oleh PayPal dan perbaikan sintaks.
+ * Konfigurasi untuk Content Security Policy (CSP) - Versi Final + Facebook Pixel Fix.
+ * Telah ditambahkan domain Facebook agar Pixel tidak terblokir.
  */
 const ContentSecurityPolicy = `
   default-src 'self';
-  script-src 'self' 'unsafe-eval' 'unsafe-inline' *.paypal.com *.sandbox.paypal.com *.googlesyndication.com *.google.com *.google-analytics.com *.googletagmanager.com *.adtrafficquality.google blob:;
+  script-src 'self' 'unsafe-eval' 'unsafe-inline' *.paypal.com *.sandbox.paypal.com *.googlesyndication.com *.google.com *.google-analytics.com *.googletagmanager.com *.adtrafficquality.google *.facebook.net *.facebook.com blob:;
   style-src 'self' 'unsafe-inline' fonts.googleapis.com;
-  img-src 'self' data: blob: fxjazgmdfhiojmapttda.supabase.co avatar.iran.liara.run lh3.googleusercontent.com *.paypal.com *.sandbox.paypal.com *.paypalobjects.com *.adtrafficquality.google;
-  connect-src 'self' *.supabase.co *.supabase.io wss://*.supabase.co wss://*.supabase.io vitals.vercel-insights.com *.paypal.com *.sandbox.paypal.com *.google-analytics.com *.analytics.google.com *.adtrafficquality.google *.google.com *.googlesyndication.com;
+  img-src 'self' data: blob: fxjazgmdfhiojmapttda.supabase.co avatar.iran.liara.run lh3.googleusercontent.com *.paypal.com *.sandbox.paypal.com *.paypalobjects.com *.adtrafficquality.google *.facebook.com;
+  connect-src 'self' *.supabase.co *.supabase.io wss://*.supabase.co wss://*.supabase.io vitals.vercel-insights.com *.paypal.com *.sandbox.paypal.com *.google-analytics.com *.analytics.google.com *.adtrafficquality.google *.google.com *.googlesyndication.com *.facebook.com *.facebook.net;
   font-src 'self' fonts.gstatic.com fxjazgmdfhiojmapttda.supabase.co blob:;
-  frame-src 'self' *.paypal.com *.sandbox.paypal.com *.google.com *.googlesyndication.com *.doubleclick.net *.adtrafficquality.google;
+  frame-src 'self' *.paypal.com *.sandbox.paypal.com *.google.com *.googlesyndication.com *.doubleclick.net *.adtrafficquality.google *.facebook.com *.facebook.net;
   object-src 'none';
   base-uri 'self';
-  form-action 'self' *.paypal.com *.sandbox.paypal.com;
+  form-action 'self' *.paypal.com *.sandbox.paypal.com *.facebook.com;
   frame-ancestors 'none';
 `.replace(/\s{2,}/g, ' ').trim();
 
