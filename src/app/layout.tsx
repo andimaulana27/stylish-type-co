@@ -8,10 +8,9 @@ import { UIProvider } from '@/context/UIContext'
 import { AuthProvider } from '@/context/AuthContext'
 import { Toaster } from 'react-hot-toast'
 import { GoogleAnalytics } from '@/components/GoogleAnalytics'
-import Script from 'next/script' 
 import { getSiteConfigAction } from '@/app/actions/configActions'
-// --- PERUBAHAN: Import komponen events baru ---
-import { MetaPixelEvents } from '@/components/MetaPixelEvents' 
+// --- PERUBAHAN: Import komponen FacebookPixel baru ---
+import FacebookPixel from '@/components/FacebookPixel'
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -38,7 +37,7 @@ export const metadata: Metadata = {
     default: 'Stylish Type | Premium Fonts for Designers',
     template: '%s | Stylish Type',
   },
-  description: 'Discover a curated collection of stunning typography. Explore premium fonts, versatile bundles, and find the perfect typeface for your next design project.',
+  description: 'Discover a curated collection of stunning typography.',
   other: {
     'google-adsense-account': 'ca-pub-8366879787496569'
   }
@@ -76,35 +75,9 @@ export default async function RootLayout({
       
       <body className={`${poppins.className} bg-brand-dark-secondary h-full flex flex-col`}>
         
-        {/* --- PERUBAHAN: Script dipindahkan ke Body dan strategy diubah ke afterInteractive --- */}
+        {/* --- PERUBAHAN: Memanggil Komponen Pixel Terpisah --- */}
         {config?.meta_pixel_id && (
-          <>
-            <Script id="meta-pixel-script" strategy="afterInteractive">
-              {`
-                !function(f,b,e,v,n,t,s)
-                {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-                n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-                if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-                n.queue=[];t=b.createElement(e);t.async=!0;
-                t.src=v;s=b.getElementsByTagName(e)[0];
-                s.parentNode.insertBefore(t,s)}(window, document,'script',
-                'https://connect.facebook.net/en_US/fbevents.js');
-                fbq('init', '${config.meta_pixel_id}');
-                fbq('track', 'PageView');
-              `}
-            </Script>
-            
-            {/* Komponen untuk menangani event saat navigasi halaman */}
-            <Suspense fallback={null}>
-               <MetaPixelEvents />
-            </Suspense>
-
-            <noscript>
-              <img height="1" width="1" style={{display:'none'}}
-                src={`https://www.facebook.com/tr?id=${config.meta_pixel_id}&ev=PageView&noscript=1`}
-              />
-            </noscript>
-          </>
+            <FacebookPixel id={config.meta_pixel_id} />
         )}
         {/* --- Akhir Perubahan Meta Pixel --- */}
 
