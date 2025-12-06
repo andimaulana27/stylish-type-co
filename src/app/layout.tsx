@@ -8,8 +8,10 @@ import { UIProvider } from '@/context/UIContext'
 import { AuthProvider } from '@/context/AuthContext'
 import { Toaster } from 'react-hot-toast'
 import { GoogleAnalytics } from '@/components/GoogleAnalytics'
-import Script from 'next/script' // <-- 1. Impor 'Script'
-import { getSiteConfigAction } from '@/app/actions/configActions' // <-- 2. Impor action baru
+import Script from 'next/script' 
+import { getSiteConfigAction } from '@/app/actions/configActions'
+// --- PERUBAHAN: Import komponen events baru ---
+import { MetaPixelEvents } from '@/components/MetaPixelEvents' 
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -33,8 +35,8 @@ const misturSleuth = localFont({
 
 export const metadata: Metadata = {
    title: {
-    default: 'Stylish Type | Premium Fonts for Designers', // DIUBAH
-    template: '%s | Stylish Type', // DIUBAH
+    default: 'Stylish Type | Premium Fonts for Designers',
+    template: '%s | Stylish Type',
   },
   description: 'Discover a curated collection of stunning typography. Explore premium fonts, versatile bundles, and find the perfect typeface for your next design project.',
   other: {
@@ -42,7 +44,6 @@ export const metadata: Metadata = {
   }
 }
 
-// --- 3. Ubah RootLayout menjadi 'async' ---
 export default async function RootLayout({
   children,
 }: {
@@ -50,7 +51,7 @@ export default async function RootLayout({
 }) {
   const supabaseStorageUrl = "https://fxjazgmdfhiojmapttda.supabase.co";
 
-  // --- 4. Ambil konfigurasi situs (termasuk Pixel ID) ---
+  // Ambil konfigurasi situs (termasuk Pixel ID)
   const { data: config } = await getSiteConfigAction();
 
   return (
@@ -71,11 +72,14 @@ export default async function RootLayout({
           src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_GA_ADS_CLIENT_ID}`}
           crossOrigin="anonymous"
         ></script>
-
-        {/* --- 5. Tambahkan Meta Pixel Script di sini --- */}
+      </head>
+      
+      <body className={`${poppins.className} bg-brand-dark-secondary h-full flex flex-col`}>
+        
+        {/* --- PERUBAHAN: Script dipindahkan ke Body dan strategy diubah ke afterInteractive --- */}
         {config?.meta_pixel_id && (
           <>
-            <Script id="meta-pixel-script" strategy="beforeInteractive">
+            <Script id="meta-pixel-script" strategy="afterInteractive">
               {`
                 !function(f,b,e,v,n,t,s)
                 {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
@@ -89,6 +93,12 @@ export default async function RootLayout({
                 fbq('track', 'PageView');
               `}
             </Script>
+            
+            {/* Komponen untuk menangani event saat navigasi halaman */}
+            <Suspense fallback={null}>
+               <MetaPixelEvents />
+            </Suspense>
+
             <noscript>
               <img height="1" width="1" style={{display:'none'}}
                 src={`https://www.facebook.com/tr?id=${config.meta_pixel_id}&ev=PageView&noscript=1`}
@@ -96,10 +106,8 @@ export default async function RootLayout({
             </noscript>
           </>
         )}
-        {/* --- Akhir Meta Pixel Script --- */}
-        
-      </head>
-      <body className={`${poppins.className} bg-brand-dark-secondary h-full flex flex-col`}>
+        {/* --- Akhir Perubahan Meta Pixel --- */}
+
         <UIProvider>
           <AuthProvider>
             <Toaster 
