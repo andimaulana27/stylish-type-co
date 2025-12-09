@@ -91,27 +91,9 @@ export async function addFontAction(formData: FormData) {
     if (!name) throw new Error('Font name is required.');
     if (isNaN(price)) throw new Error('Price must be a valid number.');
 
-    let cleanFilePath = downloadableFileUrl;
-    try {
-        // Cek jika ini adalah URL lengkap
-        if (downloadableFileUrl.startsWith('http')) {
-            const urlObj = new URL(downloadableFileUrl);
-            // Ambil path setelah nama bucket ('/products/')
-            // Format URL Supabase biasanya: .../storage/v1/object/public/products/NAMA_FILE
-            const pathParts = urlObj.pathname.split('/products/');
-            if (pathParts.length > 1) {
-                // Ambil bagian setelah bucket name dan decode (untuk spasi/karakter khusus)
-                cleanFilePath = decodeURIComponent(pathParts[1]);
-            }
-        }
-    } catch (e) {
-        console.error("Error parsing URL path:", e);
-    }
-
-    // Gunakan cleanFilePath untuk download
     const { data: zipBlob, error: downloadError } = await supabase.storage
         .from('products')
-        .download(cleanFilePath);
+        .download(downloadableFileUrl);
 
     if (downloadError) throw new Error(`Failed to download ZIP from storage: ${downloadError.message}`);
 

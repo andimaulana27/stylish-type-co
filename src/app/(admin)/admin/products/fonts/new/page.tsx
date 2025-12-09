@@ -4,15 +4,15 @@
 import Link from 'next/link';
 import { ArrowLeft, Loader2, Check, ChevronDown, X } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { useState, useTransition, useEffect, FormEvent, Fragment, KeyboardEvent, ChangeEvent } from 'react';
+import { useState, useTransition, useEffect, FormEvent, Fragment, KeyboardEvent, useCallback } from 'react';
 import { Listbox, Transition } from '@headlessui/react';
 import JSZip from 'jszip';
 import opentype from 'opentype.js';
 import RichTextEditor from '@/components/admin/RichTextEditor';
 import { addFontAction } from '@/app/actions/productActions';
 import GalleryImageUploader from '@/components/admin/GalleryImageUploader';
-import { useCallback } from 'react';
 import { getPartnerListAction } from '@/app/actions/partnerActions';
+import FontZipUploader from '@/components/admin/FontZipUploader'; // Import Komponen Uploader
 
 const MIN_FILES = 0;
 
@@ -30,11 +30,14 @@ export default function AddNewFontPage() {
     const [currentPurposeTag, setCurrentPurposeTag] = useState('');
     const [mainDescription, setMainDescription] = useState('');
     
-    const [zipFile, setZipFile] = useState<File | null>(null);
+    // State untuk file & upload
+    const [uploadResult, setUploadResult] = useState<{ downloadableFileUrl: string } | null>(null);
+    const [isZipUploading, setIsZipUploading] = useState(false);
+    
+    // State untuk preview & data font
     const [fileSize, setFileSize] = useState<string>('');
     const [fileTypes, setFileTypes] = useState<string>('');
     const [glyphsJson, setGlyphsJson] = useState<string[]>([]);
-    
     const [previewFonts, setPreviewFonts] = useState<PreviewFont[]>([]);
     const [dynamicStyles, setDynamicStyles] = useState<string>('');
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -77,6 +80,11 @@ export default function AddNewFontPage() {
         setIsGalleryUploading(isUploading);
     }, []);
 
+    const handleZipUploadComplete = useCallback((result: { downloadableFileUrl: string } | null, isUploading: boolean) => {
+        setUploadResult(result);
+        setIsZipUploading(isUploading);
+    }, []);
+
     const addTags = (tagString: string) => {
         const newTags = tagString.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0 && !tags.includes(tag));
         if (newTags.length > 0) setTags([...tags, ...newTags]);
@@ -108,9 +116,8 @@ export default function AddNewFontPage() {
         return 'Regular';
     };
 
-    const handleZipChange = async (e: ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files ? e.target.files[0] : null;
-        setZipFile(file);
+    // Fungsi scan file (diadaptasi agar menerima File objek langsung dari Uploader)
+    const handleAndScanZipFile = async (file: File | null) => {
         setFileSize(''); setFileTypes(''); setGlyphsJson([]);
         setPreviewFonts([]); setDynamicStyles('');
 
@@ -138,17 +145,21 @@ export default function AddNewFontPage() {
 
                             if (!primaryFontScanned && (fileExt === 'otf' || fileExt === 'ttf')) {
                                 if (styleName.toLowerCase() === 'regular' || fontPromises.length === 0) {
-                                  const font = opentype.parse(arrayBuffer);
-                                  const glyphSet = new Set<string>();
-                                  for (let i = 0; i < font.numGlyphs; i++) {
-                                    const glyph = font.glyphs.get(i);
-                                    if (glyph.unicode) {
-                                      const char = String.fromCodePoint(glyph.unicode);
-                                      if (char.trim().length > 0 || char === ' ') glyphSet.add(char);
+                                  try {
+                                    const font = opentype.parse(arrayBuffer);
+                                    const glyphSet = new Set<string>();
+                                    for (let i = 0; i < font.numGlyphs; i++) {
+                                        const glyph = font.glyphs.get(i);
+                                        if (glyph.unicode) {
+                                        const char = String.fromCodePoint(glyph.unicode);
+                                        if (char.trim().length > 0 || char === ' ') glyphSet.add(char);
+                                        }
                                     }
+                                    setGlyphsJson(Array.from(glyphSet));
+                                    primaryFontScanned = true;
+                                  } catch (e) {
+                                    console.warn("Error parsing font for glyphs:", e);
                                   }
-                                  setGlyphsJson(Array.from(glyphSet));
-                                  primaryFontScanned = true;
                                 }
                             }
                             
@@ -175,14 +186,17 @@ export default function AddNewFontPage() {
     const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         
-        if (isGalleryUploading) {
-            toast.error("Please wait for all images to finish uploading.");
+        if (isGalleryUploading || isZipUploading) {
+            toast.error("Please wait for all images/files to finish uploading.");
             return;
         }
-        if (!zipFile) {
-            toast.error("Font ZIP file is required!");
+        
+        // Cek apakah file sudah diupload ke storage
+        if (!uploadResult?.downloadableFileUrl) {
+            toast.error("Font ZIP file is required and must be uploaded!");
             return;
         }
+
         if (galleryImageUrls.length < MIN_FILES) {
             toast.error(`A minimum of ${MIN_FILES} preview images is required.`);
             return;
@@ -203,7 +217,10 @@ export default function AddNewFontPage() {
             formData.delete('previewImages');
             galleryImageUrls.forEach(url => formData.append('preview_image_urls', url));
             
-            formData.set('zipFile', zipFile);
+            // Perubahan Utama: Kirim URL string, bukan File object
+            formData.set('downloadable_file_url', uploadResult.downloadableFileUrl);
+            formData.delete('zipFile'); // Hapus file mentah jika ada di form
+
             formData.set('file_size_kb', fileSize.replace(' KB', ''));
             formData.set('file_types', fileTypes);
             formData.set('glyphs_json', JSON.stringify(glyphsJson));
@@ -218,7 +235,7 @@ export default function AddNewFontPage() {
         });
     };
     
-    const isUploading = isGalleryUploading;
+    const isUploading = isGalleryUploading || isZipUploading;
     const inputStyles = "w-full bg-white/5 border border-transparent rounded-full px-4 py-3 text-brand-light placeholder:text-brand-light-muted transition-colors duration-300 focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent hover:border-brand-accent/50";
     const labelStyles = "block text-sm font-medium text-brand-light-muted mb-2 group-hover:text-brand-accent transition-colors";
 
@@ -251,10 +268,13 @@ export default function AddNewFontPage() {
                             <label htmlFor="name" className={labelStyles}>Font Name *</label>
                             <input type="text" id="name" name="name" required className={inputStyles} placeholder="e.g., Hearty Beltime" value={fontName} onChange={(e) => setFontName(e.target.value)} />
                         </div>
+                        {/* FontZipUploader menggantikan input file standar */}
                         <div className="space-y-2 group">
-                            <label htmlFor="zipFile" className={labelStyles}>Font Assets (.zip) *</label>
-                            <input type="file" id="zipFile" name="zipFile" required accept=".zip" onChange={handleZipChange}
-                                className="block w-full text-sm text-brand-light-muted file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-brand-dark-secondary file:text-brand-light hover:file:bg-brand-accent/20"/>
+                            <FontZipUploader 
+                                label="Font Assets (.zip) *" 
+                                onUploadComplete={handleZipUploadComplete} 
+                                onFileSelect={handleAndScanZipFile} 
+                            />
                         </div>
                     </div>
                     
@@ -376,9 +396,9 @@ export default function AddNewFontPage() {
                     </div>
                     
                     <div className="border-t border-white/10 pt-6 flex justify-end">
-                        <button type="submit" disabled={isPending || isGalleryUploading} className="px-8 py-3 bg-brand-accent text-brand-darkest font-semibold rounded-lg transition-all duration-300 ease-in-out hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+                        <button type="submit" disabled={isPending || isUploading} className="px-8 py-3 bg-brand-accent text-brand-darkest font-semibold rounded-lg transition-all duration-300 ease-in-out hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
                             {isPending ? <Loader2 className="animate-spin" size={20} /> : null}
-                            {isPending ? 'Saving...' : isGalleryUploading ? 'Uploading Images...' : 'Save Font'}
+                            {isPending ? 'Saving...' : isUploading ? 'Uploading Files...' : 'Save Font'}
                         </button>
                     </div>
                 </form>
