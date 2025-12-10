@@ -16,12 +16,12 @@ export default function CheckoutLayout({
         <header className="py-6 bg-brand-darkest">
           <div className="container mx-auto px-6 flex items-center justify-between">
             <Link href="/" aria-label="Back to Homepage">
-              <Image 
-                src="/LOGO BARU ORANGE.svg" 
-                alt="Stylishtype Logo" 
-                width={210} 
-                height={40} 
-              />
+             <Image
+             src="/LOGO STYLISH.svg"
+             alt="Stylish Type Logo"
+             width={160}
+             height={32}
+             />
             </Link>
             <div className="flex items-center gap-3 text-brand-primary-orange">
               <Lock size={18} />

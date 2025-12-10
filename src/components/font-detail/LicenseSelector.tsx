@@ -65,7 +65,7 @@ export default function LicenseSelector({ font, licenses }: LicenseSelectorProps
 
   const defaultLicense = sortedLicenses.find(l => l.name.toLowerCase() === 'standard') || sortedLicenses[0] || null;
 
-  const [selectedLicense, setSelectedLicense] = useState<License | null>(defaultLicense);
+  const [selectedLicense, setSelectedLicense] = useState<License | null>(null);
   const [userCount, setUserCount] = useState(1);
   const [totalPrice, setTotalPrice] = useState(0);
   const [originalTotalPrice, setOriginalTotalPrice] = useState<number | null>(null);
@@ -205,7 +205,20 @@ export default function LicenseSelector({ font, licenses }: LicenseSelectorProps
       : 'border-brand-accent/50 hover:bg-brand-accent/5';
 
     return (
-      <div onClick={() => { setSelectedLicense(license); if(isUserCountDisabled) setUserCount(1); }} className={`border rounded-lg p-4 cursor-pointer transition-all duration-300 ${activeClasses}`}>
+      <div 
+        onClick={() => { 
+            // --- PERUBAHAN UTAMA: Fitur Toggle (Close/Inactive) ---
+            if (isActive) {
+                // Jika sedang aktif dan diklik lagi -> matikan (set null)
+                setSelectedLicense(null);
+            } else {
+                // Jika belum aktif -> pilih lisensi ini
+                setSelectedLicense(license); 
+                if(isUserCountDisabled) setUserCount(1); 
+            }
+        }} 
+        className={`border rounded-lg p-4 cursor-pointer transition-all duration-300 ${activeClasses}`}
+      >
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-4">
             <div className={`w-5 h-5 border-2 rounded-full flex-shrink-0 mt-0.5 flex items-center justify-center transition-all duration-200 ${isActive ? 'border-brand-accent bg-brand-accent' : 'border-brand-accent'}`}>
@@ -292,34 +305,46 @@ export default function LicenseSelector({ font, licenses }: LicenseSelectorProps
         ))}
       </div>
       
-      <div className="border-t border-white/10 pt-4 mt-6">
-        {isLicenseCoveredBySub ? (
-          <div className="bg-brand-secondary-green/10 border border-brand-secondary-green/50 rounded-lg p-4 text-center">
-            <div className="flex justify-center items-center gap-2">
-                <Crown size={18} className="text-brand-secondary-green" />
-                <h4 className="font-semibold text-brand-secondary-green">Included in Your Plan</h4>
-            </div>
-            <p className="text-xs text-brand-light-muted mt-1">This license is free with your active subscription.</p>
+      {/* Bagian Total & Tombol - Hanya muncul jika ada lisensi yang dipilih */}
+      {selectedLicense && (
+        <>
+          <div className="border-t border-white/10 pt-4 mt-6">
+            {isLicenseCoveredBySub ? (
+              <div className="bg-brand-secondary-green/10 border border-brand-secondary-green/50 rounded-lg p-4 text-center">
+                <div className="flex justify-center items-center gap-2">
+                    <Crown size={18} className="text-brand-secondary-green" />
+                    <h4 className="font-semibold text-brand-secondary-green">Included in Your Plan</h4>
+                </div>
+                <p className="text-xs text-brand-light-muted mt-1">This license is free with your active subscription.</p>
+              </div>
+            ) : (
+              <div className="flex justify-between items-center text-xl font-medium">
+                <span>Total</span>
+                <div className='flex items-center gap-3'>
+                    {originalTotalPrice && <span className="text-lg text-brand-light-muted line-through">${originalTotalPrice.toFixed(2)}</span>}
+                    <span className="text-2xl font-bold text-brand-accent">${totalPrice.toFixed(2)}</span>
+                </div>
+              </div>
+            )}
           </div>
-        ) : (
-          <div className="flex justify-between items-center text-xl font-medium">
-            <span>Total</span>
-            <div className='flex items-center gap-3'>
-                {originalTotalPrice && <span className="text-lg text-brand-light-muted line-through">${originalTotalPrice.toFixed(2)}</span>}
-                <span className="text-2xl font-bold text-brand-accent">${totalPrice.toFixed(2)}</span>
-            </div>
-          </div>
-        )}
-      </div>
 
-      <button 
-        onClick={finalActionHandler} 
-        disabled={isPending}
-        className="w-full mt-6 px-8 py-4 font-medium rounded-full text-center bg-brand-accent text-brand-darkest transition-all duration-300 ease-in-out hover:brightness-110 hover:shadow-lg hover:shadow-brand-accent/30 disabled:opacity-60 flex items-center justify-center gap-2"
-      >
-        {isPending ? <Loader2 className="animate-spin"/> : <ButtonIcon size={20} />}
-        {isPending ? 'Processing...' : buttonText}
-      </button>
+     <button 
+            onClick={finalActionHandler} 
+            disabled={isPending}
+            className="w-full mt-6 px-8 py-4 font-medium rounded-full text-center bg-brand-accent text-brand-darkest transition-all duration-300 ease-in-out hover:brightness-110 hover:shadow-lg hover:shadow-brand-accent/30 disabled:opacity-60 flex items-center justify-center gap-2"
+          >
+            {isPending ? <Loader2 className="animate-spin"/> : <ButtonIcon size={20} />}
+            {isPending ? 'Processing...' : buttonText}
+          </button>
+        </>
+      )}
+      
+      {/* Pesan opsional jika belum ada lisensi yang dipilih */}
+      {!selectedLicense && (
+        <div className="mt-6 p-4 border border-dashed border-white/20 rounded-lg text-center text-brand-light-muted text-sm">
+          Please select a license type to view price and add to cart.
+        </div>
+      )}
     </div>
   );
 };
